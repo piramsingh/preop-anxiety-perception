@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from preop.features.audio import VocalFeatures, VocalWindow
 from preop.features.body import BodyFeatures, BodyTracker, Person
+from preop.features.face import FaceFeatures, FaceUnavailable
 from preop.score.placeholder import PlaceholderScore, placeholder_score
 from preop.sources import Source
 from preop.types import AudioChunk, PulseSample, VideoFrame
@@ -21,6 +22,10 @@ class State:
     body: BodyFeatures | None = None
     vocal: VocalFeatures | None = None
     pulse: PulseSample | None = None
+    face: FaceFeatures | None = None
+    face_latencies: list[float] = field(default_factory=list)
+    face_error: str | None = None
+    latest_image_t: float | None = None
     pose_latencies: list[float] = field(default_factory=list)
     frames: int = 0
     latest_image: object | None = None
@@ -35,6 +40,7 @@ class Tick:
     body: BodyFeatures | None
     vocal: VocalFeatures | None
     pulse: PulseSample | None
+    face: FaceFeatures | None = None
 
 
 class Pipeline:
@@ -45,10 +51,13 @@ class Pipeline:
         pulse: Source[PulseSample] | None = None,
         detect: Callable[[float, object], list[Person]] | None = None,
         vocal_window: VocalWindow | None = None,
+        analyze_face: Callable[[float, object], FaceFeatures] | None = None,
     ) -> None:
         self._video, self._audio, self._pulse = video, audio, pulse
         self._detect = detect
         self._vocal_window = vocal_window
+        self._analyze_face = analyze_face
+        self._stopping = threading.Event()
         self.state = State()
 
     def _guarded(self, target: Callable[[], None]) -> threading.Thread:
@@ -75,7 +84,29 @@ class Pipeline:
                 self.state.pose_latencies.append(latency)
                 self.state.frames += 1
                 self.state.latest_image = frame.image
+                self.state.latest_image_t = frame.t
                 self.state.latest_people = list(tracker.confirmed)
+
+    def _run_face(self) -> None:
+        """Analyzes the newest frame. Losing the face signal never stops the other signals."""
+        last_t = None
+        while not self._stopping.is_set():
+            with self.state.lock:
+                image, t = self.state.latest_image, self.state.latest_image_t
+            if image is None or t == last_t:
+                time.sleep(0.005)
+                continue
+            last_t = t
+            try:
+                features = self._analyze_face(t, image)
+            except FaceUnavailable as error:
+                with self.state.lock:
+                    self.state.face_error = str(error)
+                return
+            latency = time.monotonic() - t
+            with self.state.lock:
+                self.state.face = features
+                self.state.face_latencies.append(latency)
 
     def _run_audio(self) -> None:
         for chunk in self._audio.stream():
@@ -93,15 +124,17 @@ class Pipeline:
     def snapshot(self, now: float) -> Tick:
         with self.state.lock:
             body, vocal, pulse = self.state.body, self.state.vocal, self.state.pulse
+            face = self.state.face
         body = body if body is not None and now - body.t <= STALE_AFTER_S else None
         vocal = vocal if vocal is not None and now - vocal.t <= STALE_AFTER_S else None
         pulse = pulse if pulse is not None and now - pulse.t <= STALE_AFTER_S else None
+        face = face if face is not None and now - face.t <= STALE_AFTER_S else None
         score = placeholder_score(
             body.activity if body else None,
             vocal.dbfs if vocal else None,
             body.confidence if body else 1.0,
         )
-        return Tick(now, score, body, vocal, pulse)
+        return Tick(now, score, body, vocal, pulse, face)
 
     def run(
         self,
@@ -120,6 +153,8 @@ class Pipeline:
         if self._audio is not None and self._vocal_window is not None:
             threads.append(self._guarded(self._run_audio))
         finite = threads[:]  # A simulated pulse never ends, so it cannot decide when replay stops.
+        if self._video is not None and self._analyze_face is not None:
+            threads.append(self._guarded(self._run_face))
         if self._pulse is not None:
             threads.append(self._guarded(self._run_pulse))
 
@@ -151,6 +186,7 @@ class Pipeline:
                         raise errors[0]
                     return
         finally:
+            self._stopping.set()
             for source in (self._video, self._audio, self._pulse):
                 if source is not None:
                     source.stop()
@@ -160,9 +196,19 @@ class Pipeline:
     def latency_summary(self) -> str:
         with self.state.lock:
             values = list(self.state.pose_latencies)
+            face_values = list(self.state.face_latencies)
             frames = self.state.frames
         if not values:
             return "no video frames processed"
-        p50 = statistics.median(values) * 1000
-        p95 = sorted(values)[int(len(values) * 0.95) - 1] * 1000
-        return f"{frames} frames, capture-to-pose latency p50 {p50:.0f} ms, p95 {p95:.0f} ms"
+        summary = f"{frames} frames, capture-to-pose latency {_percentiles(values)}"
+        if face_values:
+            summary += (
+                f"; {len(face_values)} face results, capture-to-face {_percentiles(face_values)}"
+            )
+        return summary
+
+
+def _percentiles(values: list[float]) -> str:
+    p50 = statistics.median(values) * 1000
+    p95 = sorted(values)[max(int(len(values) * 0.95) - 1, 0)] * 1000
+    return f"p50 {p50:.0f} ms, p95 {p95:.0f} ms"

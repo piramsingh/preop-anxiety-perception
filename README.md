@@ -30,11 +30,33 @@ Each line shows the placeholder score, its confidence, then people, `activity` (
 second), `parent_dist` (body lengths), loudness, pitch and simulated heart rate. `--` means that
 signal is missing. Simulated heart rate is display-only and never affects the score.
 
+## Facial action units (optional)
+
+Facial analysis needs OpenFace, installed separately because its license doesn't allow copying it
+into this repo. Without it, the pipeline prints a notice and runs on the other signals.
+
+```sh
+brew install cmake openblas tbb boost dlib opencv@4 wget
+git clone https://github.com/TadasBaltrusaitis/OpenFace.git ~/DEV/OpenFace
+cd ~/DEV/OpenFace && bash download_models.sh
+OpenBLAS_HOME=$(brew --prefix openblas) cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DOpenCV_DIR=$(brew --prefix opencv@4)/lib/cmake/opencv4 \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix dlib);$(brew --prefix tbb);$(brew --prefix boost)"
+cmake --build build -j8
+cp lib/local/LandmarkDetector/model/patch_experts/*.dat build/bin/model/patch_experts/
+cd - && ./scripts/build_openface_bridge.sh
+```
+
+`download_models.sh` can save Dropbox error pages without failing. The four `cen_patches_*.dat` files
+should be 60.6, 60.6, 154 and 154 MB. If one is about 200 KB, download it again with `?dl=1` added to
+its URL.
+
 ## Layout
 
 ```
 src/preop/sources/    webcam, mic, video-file replay, simulated pulse-ox
-src/preop/features/   pose -> activity + parent proximity; audio -> vocal features
+src/preop/features/   pose -> activity + parent proximity; face -> action units; audio -> vocal features
+native/               local bridge to OpenFace
 src/preop/score/      M1 placeholder
 src/preop/pipeline.py one thread per source, 1 Hz score tick
 config/               input sources and modules, no code changes needed

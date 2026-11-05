@@ -37,3 +37,6 @@ dist/
 build/
 
 .DS_Store
+
+# Native build output
+native/*/build/

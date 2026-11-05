@@ -11,6 +11,7 @@ class VideoConfig:
     camera_index: int = 0
     path: str | None = None
     num_poses: int = 2
+    openface: bool = True
 
 
 @dataclass

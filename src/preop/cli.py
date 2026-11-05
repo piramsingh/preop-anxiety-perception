@@ -4,6 +4,7 @@ from pathlib import Path
 
 from preop.config import Config, load_config
 from preop.features.audio import VocalWindow, make_smile_analyzer
+from preop.features.face import FaceExtractor, FaceUnavailable
 from preop.pipeline import Pipeline, Tick
 from preop.sources.mic import MicSource
 from preop.sources.pulse import SimulatedPulseSource
@@ -18,6 +19,10 @@ def _fmt(value: float | None, spec: str = ".2f") -> str:
 def format_tick(tick: Tick) -> str:
     score = _fmt(tick.score.value, "5.1f") if tick.score.value is not None else "   --"
     body, vocal = tick.body, tick.vocal
+    face = "--"
+    if tick.face is not None:
+        active = " ".join(f"{name}={value:.1f}" for name, value in tick.face.active())
+        face = (active or "neutral") if tick.face.detected else "no face"
     return (
         f"PLACEHOLDER {score}  conf {tick.score.confidence:.2f} | "
         f"people {body.people if body else '--'}  "
@@ -25,6 +30,7 @@ def format_tick(tick: Tick) -> str:
         f"parent_dist {_fmt(body.parent_distance if body else None)} | "
         f"dBFS {_fmt(vocal.dbfs if vocal else None, '.0f')}  "
         f"pitch {_fmt(vocal.pitch_semitones if vocal else None, '.1f')} | "
+        f"face {face} | "
         f"sim_hr {_fmt(tick.pulse.bpm if tick.pulse else None, '.0f')}"
     )
 
@@ -58,7 +64,13 @@ def build_pipeline(config: Config) -> Pipeline:
         window = VocalWindow(analyzer)
 
     pulse = SimulatedPulseSource() if config.pulse.source == "simulated" else None
-    return Pipeline(video, audio, pulse, detect, window)
+    face = None
+    if config.video.source != "off" and config.video.openface:
+        try:
+            face = FaceExtractor.from_paths()
+        except FaceUnavailable as error:
+            print(f"Face signal off: {error}", flush=True)
+    return Pipeline(video, audio, pulse, detect, window, face.analyze if face else None)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -108,6 +120,8 @@ def main(argv: list[str] | None = None) -> int:
     except SourceUnavailable as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
+    if pipeline.state.face_error:
+        print(f"Face signal stopped: {pipeline.state.face_error}")
     print(pipeline.latency_summary())
     return 0
 

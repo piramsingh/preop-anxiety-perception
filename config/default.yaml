@@ -4,6 +4,7 @@ video:
   camera_index: 0
   path: null
   num_poses: 2        # child + parent
+  openface: true      # facial action units, skipped with a notice if the bridge is not built
 audio:
   source: mic         # mic | file | off
   device_hint: MacBook  # substring of the input device name; falls back to the system default

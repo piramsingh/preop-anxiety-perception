@@ -23,6 +23,15 @@ def _number(value: float | None, spec: str = ".2f") -> str:
     return "--" if value is None else format(value, spec)
 
 
+def _face_text(tick: Tick) -> str:
+    if tick.face is None:
+        return "--"
+    if not tick.face.detected:
+        return "no face"
+    active = " ".join(f"{name} {value:.1f}" for name, value in tick.face.active())
+    return active or "neutral"
+
+
 def draw(image: np.ndarray, people: list[Person], tick: Tick | None) -> np.ndarray:
     canvas = image.copy()
     height, width = canvas.shape[:2]
@@ -43,6 +52,7 @@ def draw(image: np.ndarray, people: list[Person], tick: Tick | None) -> np.ndarr
         _text(canvas, f"Movement: {_number(body.activity if body else None)}", 102)
         _text(canvas, f"Loudness: {_number(vocal.dbfs if vocal else None, '.0f')} dB", 134)
         _text(canvas, f"Pitch: {_number(vocal.pitch_semitones if vocal else None, '.1f')}", 166)
+        _text(canvas, f"Face: {_face_text(tick)}", 198)
     _text(canvas, "Not a real distress score yet", height - 20, 0.6)
     return canvas
 
