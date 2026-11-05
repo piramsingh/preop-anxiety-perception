@@ -143,3 +143,32 @@ def test_pose_runs_on_blank_image_without_finding_people():
         assert extractor.detect(1.0, np.zeros((240, 320, 3), dtype=np.uint8)) == []
     finally:
         extractor.close()
+
+
+def test_closing_the_window_stops_the_run():
+    class Endless:
+        def __init__(self):
+            self._stop = threading.Event()
+
+        def stream(self):
+            from preop.types import VideoFrame
+
+            while not self._stop.wait(0.01):
+                yield VideoFrame(time.monotonic(), np.zeros((4, 4, 3), dtype=np.uint8))
+
+        def stop(self):
+            self._stop.set()
+
+    start = time.monotonic()
+    Pipeline(Endless(), detect=fake_detect).run(lambda tick: None, on_idle=lambda: False)
+    assert time.monotonic() - start < 3
+
+
+def test_preview_draws_without_changing_the_source_frame():
+    from preop.preview import draw
+
+    image = np.zeros((240, 320, 3), dtype=np.uint8)
+    drawn = draw(image, fake_detect(0.0, image), None)
+    assert image.sum() == 0
+    assert drawn.sum() > 0
+    assert drawn.shape == image.shape

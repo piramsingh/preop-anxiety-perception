@@ -23,6 +23,8 @@ class State:
     pulse: PulseSample | None = None
     pose_latencies: list[float] = field(default_factory=list)
     frames: int = 0
+    latest_image: object | None = None
+    latest_people: list[Person] = field(default_factory=list)
     errors: list[BaseException] = field(default_factory=list)
 
 
@@ -72,6 +74,8 @@ class Pipeline:
                 self.state.body = features
                 self.state.pose_latencies.append(latency)
                 self.state.frames += 1
+                self.state.latest_image = frame.image
+                self.state.latest_people = list(tracker.confirmed)
 
     def _run_audio(self) -> None:
         for chunk in self._audio.stream():
@@ -104,7 +108,12 @@ class Pipeline:
         on_tick: Callable[[Tick], None],
         duration_s: float | None = None,
         tick_s: float = 1.0,
+        on_idle: Callable[[], bool] | None = None,
     ) -> None:
+        """Runs until the sources end, the duration passes, or `on_idle` returns False.
+
+        `on_idle` runs on the calling thread, which is where macOS requires windows to be drawn.
+        """
         threads = []
         if self._video is not None and self._detect is not None:
             threads.append(self._guarded(self._run_video))
@@ -115,14 +124,23 @@ class Pipeline:
             threads.append(self._guarded(self._run_pulse))
 
         start = time.monotonic()
+        next_tick = start + tick_s
         try:
             while True:
-                time.sleep(tick_s)
+                if on_idle is None:
+                    time.sleep(max(next_tick - time.monotonic(), 0.0))
+                else:
+                    if not on_idle():
+                        return
+                    time.sleep(0.01)
                 now = time.monotonic()
                 with self.state.lock:
                     errors = list(self.state.errors)
                 if errors:
                     raise errors[0]
+                if now < next_tick:
+                    continue
+                next_tick = now + tick_s
                 on_tick(self.snapshot(now))
                 if duration_s is not None and now - start >= duration_s:
                     return

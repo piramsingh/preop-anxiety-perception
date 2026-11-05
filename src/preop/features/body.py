@@ -14,6 +14,11 @@ LEFT_SHOULDER, RIGHT_SHOULDER, LEFT_HIP, RIGHT_HIP = 11, 12, 23, 24
 MIN_VISIBILITY = 0.5
 MIN_POINTS = 5
 FALLBACK_BODY_SCALE = 0.25
+# Measured seated at a laptop: hips are out of frame and guessed, giving scales as low as 0.06,
+# which inflated speed. Scale also uses shoulder width and has this floor.
+MIN_BODY_SCALE = 0.12
+# Whole-body speed above this (body lengths per second) means tracking jumped, not real movement.
+MAX_PLAUSIBLE_SPEED = 5.0
 MAX_GAP_S = 1.0  # Longer gaps reset motion, so the jump is not read as movement.
 # Motion is measured over this interval. Frame-to-frame at 30 fps mostly measures keypoint jitter.
 MOTION_INTERVAL_S = 0.2
@@ -22,6 +27,12 @@ JITTER_DEADBAND = 0.03
 # People whose keypoints differ by less than this many body lengths are one person detected twice.
 # It compares all keypoints, so a child on a parent's lap (close hips, separate heads) stays two.
 DUPLICATE_DISTANCE = 0.3
+# MediaPipe sometimes reports brief false people that jump around the frame. Measured with one
+# person in view: bursts of at most 0.33 s. A second person counts only after staying in about the
+# same place (image widths per frame) for this long.
+SECOND_PERSON_CONFIRM_S = 0.75
+SECOND_PERSON_MAX_JUMP = 0.25
+SECOND_PERSON_GRACE_S = 0.3  # Brief dropouts of a confirmed person are tolerated.
 
 
 @dataclass(frozen=True)
@@ -40,13 +51,16 @@ class Person:
         return source[:, :2].mean(axis=0)
 
     def body_scale(self, aspect: float = 1.0) -> float:
-        """Shoulder-to-hip distance, so that a person's distance from the camera cancels out."""
-        indices = [LEFT_SHOULDER, RIGHT_SHOULDER, LEFT_HIP, RIGHT_HIP]
-        if (self.points[indices, 2] < MIN_VISIBILITY).any():
+        """Larger of torso length and shoulder width, so distance from the camera cancels out."""
+        points = self.points
+        if (points[[LEFT_SHOULDER, RIGHT_SHOULDER], 2] < MIN_VISIBILITY).any():
             return FALLBACK_BODY_SCALE
-        shoulders = self.points[[LEFT_SHOULDER, RIGHT_SHOULDER], :2].mean(axis=0)
-        hips = self.points[[LEFT_HIP, RIGHT_HIP], :2].mean(axis=0)
-        return max(_distance(shoulders, hips, aspect), 1e-3)
+        left, right = points[LEFT_SHOULDER, :2], points[RIGHT_SHOULDER, :2]
+        scale = _distance(left, right, aspect)
+        if (points[[LEFT_HIP, RIGHT_HIP], 2] >= MIN_VISIBILITY).all():
+            hips = points[[LEFT_HIP, RIGHT_HIP], :2].mean(axis=0)
+            scale = max(scale, _distance((left + right) / 2, hips, aspect))
+        return max(scale, MIN_BODY_SCALE)
 
 
 def _distance(a: np.ndarray, b: np.ndarray, aspect: float) -> float:
@@ -91,8 +105,35 @@ class BodyFeatures:
     confidence: float  # Mean visibility of the child's keypoints, 0-1.
 
 
+class SecondPersonFilter:
+    """Passes a second person only once they have persisted in about the same place."""
+
+    def __init__(self) -> None:
+        self._last: Person | None = None
+        self._since = 0.0
+        self._seen = 0.0
+
+    def update(self, t: float, others: Sequence[Person], aspect: float = 1.0) -> Person | None:
+        if self._last is not None and t - self._seen > SECOND_PERSON_GRACE_S:
+            self._last = None
+        if others:
+            center = self._last.center() if self._last is not None else None
+            current = others[identify_child(others, center, aspect)]
+            if (
+                center is None
+                or _distance(current.center(), center, aspect) > SECOND_PERSON_MAX_JUMP
+            ):
+                self._since = t
+            self._last, self._seen = current, t
+        if self._last is None or t - self._since < SECOND_PERSON_CONFIRM_S:
+            return None
+        return self._last
+
+
 class BodyTracker:
     def __init__(self, smoothing: float = 0.3) -> None:
+        self.confirmed: list[Person] = []  # People who passed the filters, for display.
+        self._second = SecondPersonFilter()
         self._smoothing = smoothing
         self._previous: Person | None = None  # Last frame, for following the child.
         self._reference: Person | None = None  # Last motion sample.
@@ -104,6 +145,8 @@ class BodyTracker:
         center = self._previous.center() if self._previous is not None else None
         index = identify_child(people, center, aspect)
         if index is None:
+            self.confirmed = []
+            self._second = SecondPersonFilter()
             self._previous = self._reference = self._reference_t = self._activity = None
             return BodyFeatures(t, 0, None, None, 0.0)
 
@@ -111,14 +154,15 @@ class BodyTracker:
         scale = child.body_scale(aspect)
         self._update_activity(t, child, scale, aspect)
         others = [person for i, person in enumerate(people) if i != index]
+        second = self._second.update(t, others, aspect)
         distance = None
-        if others:
-            nearest = min(_distance(child.center(), o.center(), aspect) for o in others)
-            distance = nearest / scale
+        if second is not None:
+            distance = _distance(child.center(), second.center(), aspect) / scale
+        self.confirmed = [child] if second is None else [child, second]
 
         self._previous = child
         confidence = float(child.points[:, 2].mean())
-        return BodyFeatures(t, len(people), self._activity, distance, confidence)
+        return BodyFeatures(t, len(self.confirmed), self._activity, distance, confidence)
 
     def _update_activity(self, t: float, child: Person, scale: float, aspect: float) -> None:
         reference, reference_t = self._reference, self._reference_t
@@ -135,6 +179,8 @@ class BodyTracker:
         delta = child.points[both, :2] - reference.points[both, :2]
         delta[:, 0] *= aspect
         moved = np.hypot(delta[:, 0], delta[:, 1]) / scale
+        if float(np.median(moved)) / elapsed > MAX_PLAUSIBLE_SPEED:
+            return  # Tracking jumped, so keep the last value.
         # Averaging over all points keeps limb-only fidgeting visible, which a median would hide.
         speed = float(np.where(moved < JITTER_DEADBAND, 0.0, moved).mean()) / elapsed
         if self._activity is None:

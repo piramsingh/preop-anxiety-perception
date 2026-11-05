@@ -66,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=None, help="YAML config (default: built-in)")
     parser.add_argument("--video-file", type=Path, help="Replay this file instead of live capture")
     parser.add_argument("--duration", type=float, default=None, help="Stop after this many seconds")
+    parser.add_argument("--no-preview", action="store_true", help="Terminal output only")
     args = parser.parse_args(argv)
 
     config = load_config(args.config)
@@ -76,7 +77,32 @@ def main(argv: list[str] | None = None) -> int:
     print("Placeholder output only: this is not a mYPAS or distress estimate. Ctrl-C to stop.")
     try:
         pipeline = build_pipeline(config)
-        pipeline.run(lambda tick: print(format_tick(tick), flush=True), args.duration)
+        latest_tick: list[Tick] = []
+
+        def on_tick(tick: Tick) -> None:
+            latest_tick[:] = [tick]
+            print(format_tick(tick), flush=True)
+
+        on_idle = None
+        if not args.no_preview and config.video.source != "off":
+            from preop.preview import PreviewWindow, draw
+
+            window = PreviewWindow()
+
+            def on_idle() -> bool:
+                with pipeline.state.lock:
+                    image = pipeline.state.latest_image
+                    people = pipeline.state.latest_people
+                if image is None:
+                    return True
+                tick = latest_tick[0] if latest_tick else None
+                return window.show(draw(image, people, tick))
+
+        try:
+            pipeline.run(on_tick, args.duration, on_idle=on_idle)
+        finally:
+            if on_idle is not None:
+                window.close()
     except KeyboardInterrupt:
         pass
     except SourceUnavailable as error:

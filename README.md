@@ -16,7 +16,8 @@ Requires macOS on Apple Silicon, [uv](https://docs.astral.sh/uv/) and `ffmpeg`.
 
 ```sh
 uv sync
-uv run preop                         # Mac camera and mic, Ctrl-C to stop
+uv run preop                         # Mac camera and mic, opens a live window (Q to close)
+uv run preop --no-preview            # terminal output only
 uv run preop --duration 30           # stop after 30 seconds
 uv run preop --video-file clip.mp4   # replay a recording in real time
 uv run preop --config config/default.yaml

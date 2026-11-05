@@ -56,13 +56,44 @@ def test_low_visibility_points_do_not_count_as_motion():
     assert tracker.update(0.25, [person(0.9, visibility=0.1)]).activity is None
 
 
-def test_parent_distance_needs_a_second_person():
+def feed_two_people(tracker: BodyTracker, seconds: float):
+    features = None
+    for frame in range(int(seconds * 30) + 1):
+        features = tracker.update(frame / 30, [person(0.5), person(0.8)])
+    return features
+
+
+def test_parent_distance_needs_a_confirmed_second_person():
     tracker = BodyTracker()
     assert tracker.update(0.0, [person(0.5)]).parent_distance is None
+    features = feed_two_people(BodyTracker(), 1.0)
+    assert features.people == 2
     # The people are 0.3 apart and a body length is 0.2, so 1.5 body lengths.
-    assert tracker.update(0.1, [person(0.5), person(0.8)]).parent_distance == pytest.approx(
-        1.5, rel=1e-3
-    )
+    assert features.parent_distance == pytest.approx(1.5, rel=1e-3)
+
+
+def test_brief_false_person_is_ignored():
+    tracker = BodyTracker()
+    tracker.update(0.0, [person(0.5)])
+    for frame in range(1, 10):  # 0.3 s burst
+        features = tracker.update(frame / 30, [person(0.5), person(0.9)])
+        assert features.people == 1
+        assert features.parent_distance is None
+
+
+def test_false_person_that_keeps_jumping_is_ignored():
+    tracker = BodyTracker()
+    for frame in range(60):
+        ghost = person(0.1 if frame % 2 else 0.9)
+        features = tracker.update(frame / 30, [person(0.5), ghost])
+    assert features.people == 1
+
+
+def test_confirmed_person_survives_a_brief_dropout():
+    tracker = BodyTracker()
+    feed_two_people(tracker, 1.0)
+    assert tracker.update(1.1, [person(0.5)]).people == 2
+    assert tracker.update(2.0, [person(0.5)]).people == 1
 
 
 def test_child_is_followed_by_position_regardless_of_detection_order():
@@ -104,3 +135,16 @@ def test_child_on_lap_is_not_treated_as_a_duplicate():
     child = person(0.5, cy=0.7)
     child.points[:11, 1] = 0.2  # Same hips, but the heads are far apart.
     assert len(drop_duplicates([parent, child])) == 2
+
+
+def test_guessed_hips_cannot_shrink_the_scale_and_inflate_speed():
+    squashed = person(0.5)
+    squashed.points[[LEFT_SHOULDER, RIGHT_SHOULDER], 1] = 0.49  # Torso looks almost zero long.
+    assert squashed.body_scale() >= 0.12
+
+
+def test_whole_body_teleport_is_not_read_as_movement():
+    tracker = BodyTracker(smoothing=1.0)
+    tracker.update(0.0, [person(0.2)])
+    assert tracker.update(0.25, [person(0.2)]).activity == pytest.approx(0.0)
+    assert tracker.update(0.5, [person(0.9)]).activity == pytest.approx(0.0)
