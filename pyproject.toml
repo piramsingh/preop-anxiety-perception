@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 preop = "preop.cli:main"
+preop-face-check = "preop.face_check:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6"]
