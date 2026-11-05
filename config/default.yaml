@@ -1,0 +1,13 @@
+# Input sources and modules. Changing inputs should never need a code change.
+video:
+  source: webcam      # webcam | file | off
+  camera_index: 0
+  path: null
+  num_poses: 2        # child + parent
+audio:
+  source: mic         # mic | file | off
+  device_hint: MacBook  # substring of the input device name; falls back to the system default
+  path: null
+  opensmile: true
+pulse:
+  source: simulated   # simulated | off
