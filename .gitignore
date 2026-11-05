@@ -1,0 +1,39 @@
+# --- Privacy: never commit audio, video, frames or recordings ---
+data/
+recordings/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.m4v
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.opus
+*.jpg
+*.jpeg
+*.png
+*.heic
+*.bmp
+*.tiff
+*.npy
+*.npz
+
+# Downloaded model weights
+models/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+.DS_Store
