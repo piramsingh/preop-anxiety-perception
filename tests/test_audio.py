@@ -61,3 +61,31 @@ def test_mic_selection_prefers_hint_and_skips_output_only_devices():
     assert pick_input_device(devices, "MacBook") == 2
     assert pick_input_device(devices, "Missing") is None
     assert pick_input_device(devices, None) is None
+
+
+def _pitch_of(samples: np.ndarray, pitch: float) -> float | None:
+    def analyzer(samples, rate):
+        return {F0_COLUMN: pitch, LOUDNESS_COLUMN: 0.1, HNR_COLUMN: 0.0}
+
+    return VocalWindow(analyzer, window_s=1.0, hop_s=1.0).push(1.0, samples).pitch_semitones
+
+
+def _tone(amplitude: float) -> np.ndarray:
+    return (amplitude * np.sin(2 * np.pi * 120 * np.arange(RATE) / RATE)).astype(np.float32)
+
+
+def test_steady_quiet_hum_is_not_a_voice():
+    assert _pitch_of(_tone(0.005), 23.0) is None
+
+
+def test_quiet_speech_like_sound_is_a_voice():
+    syllables = 0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 4 * np.arange(RATE) / RATE))
+    assert _pitch_of((_tone(0.005) * (syllables + 0.01)).astype(np.float32), 30.0) == 30.0
+
+
+def test_steady_loud_cry_is_a_voice():
+    assert _pitch_of(_tone(0.5), 40.0) == 40.0
+
+
+def test_pitch_below_any_speaking_voice_is_not_a_voice():
+    assert _pitch_of(_tone(0.5), 14.0) is None

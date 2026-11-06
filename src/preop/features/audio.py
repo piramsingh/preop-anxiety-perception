@@ -8,6 +8,14 @@ from dataclasses import dataclass
 import numpy as np
 
 SILENCE_DBFS = -55.0
+# A pitch reading on room noise is not a voice. Measured with nobody speaking on the MacBook mic:
+# hum at -46 to -49 dBFS, read as pitch up to 23 semitones. Level cannot separate this from speech,
+# since quiet recorded speech sits at the same level. Speech rises and falls within a window and hum
+# does not, so a voice needs this much modulation (dB between loud and quiet frames) unless loud.
+MIN_VOICE_MODULATION_DB = 10.0
+LOUD_ENOUGH_DBFS = -30.0  # A sustained cry can be steady, and hum at this level is unlikely.
+FRAME_S = 0.05
+MIN_VOICE_SEMITONES = 17.4  # About 75 Hz, below ordinary adult and child speaking pitch.
 F0_COLUMN = "F0semitoneFrom27.5Hz_sma3nz_amean"
 LOUDNESS_COLUMN = "loudness_sma3_amean"
 HNR_COLUMN = "HNRdBACF_sma3nz_amean"
@@ -18,6 +26,16 @@ def rms_dbfs(samples: np.ndarray) -> float:
         return -120.0
     rms = math.sqrt(float(np.mean(np.square(samples, dtype=np.float64))))
     return 20.0 * math.log10(max(rms, 1e-6))
+
+
+def modulation_db(samples: np.ndarray, sample_rate: int) -> float:
+    """How far the level moves within the window: 90th minus 10th percentile of frame level."""
+    size = max(int(FRAME_S * sample_rate), 1)
+    count = samples.size // size
+    if count < 2:
+        return 0.0
+    levels = [rms_dbfs(frame) for frame in np.split(samples[: count * size], count)]
+    return float(np.percentile(levels, 90) - np.percentile(levels, 10))
 
 
 @dataclass(frozen=True)
@@ -75,6 +93,11 @@ class VocalWindow:
         window = np.concatenate(self._chunks)[-self._window :]
         return self._features(t_end, window)
 
+    def _is_voice_like(self, window: np.ndarray, dbfs: float) -> bool:
+        return (
+            dbfs >= LOUD_ENOUGH_DBFS or modulation_db(window, self._rate) >= MIN_VOICE_MODULATION_DB
+        )
+
     def _features(self, t: float, window: np.ndarray) -> VocalFeatures:
         dbfs = rms_dbfs(window)
         if dbfs < SILENCE_DBFS:
@@ -86,7 +109,7 @@ class VocalWindow:
             dbfs,
             True,
             # openSMILE reports 0 when it finds no voiced frames.
-            pitch if pitch > 0 else None,
+            pitch if pitch >= MIN_VOICE_SEMITONES and self._is_voice_like(window, dbfs) else None,
             values[LOUDNESS_COLUMN],
             values[HNR_COLUMN],
         )
