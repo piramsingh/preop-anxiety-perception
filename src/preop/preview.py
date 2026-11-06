@@ -32,8 +32,7 @@ def _face_text(tick: Tick) -> str:
     return active or "neutral"
 
 
-def draw(image: np.ndarray, people: list[Person], tick: Tick | None) -> np.ndarray:
-    canvas = image.copy()
+def draw_people(canvas: np.ndarray, people: list[Person]) -> None:
     height, width = canvas.shape[:2]
     for person in people:
         points = person.points
@@ -45,15 +44,24 @@ def draw(image: np.ndarray, people: list[Person], tick: Tick | None) -> np.ndarr
             if points[index, 2] >= MIN_VISIBILITY:
                 cv2.circle(canvas, point, 4, WHITE, -1, cv2.LINE_AA)
 
+
+def draw(image: np.ndarray, people: list[Person], tick: Tick | None) -> np.ndarray:
+    canvas = image.copy()
+    height = canvas.shape[0]
+    draw_people(canvas, people)
     _text(canvas, f"People detected: {len(people)}", 34)
     if tick is not None:
         body, vocal = tick.body, tick.vocal
-        _text(canvas, f"Placeholder score: {_number(tick.score.value, '.0f')} / 100", 68, 0.9)
+        if tick.score.calibrating:
+            _text(canvas, f"Calibrating: {tick.score.baseline_progress:.0%}", 68, 0.9)
+        else:
+            value = _number(tick.score.value, ".0f")
+            _text(canvas, f"mYPAS: {value}  conf {tick.score.confidence:.2f}", 68, 0.9)
         _text(canvas, f"Movement: {_number(body.activity if body else None)}", 102)
         _text(canvas, f"Loudness: {_number(vocal.dbfs if vocal else None, '.0f')} dB", 134)
         _text(canvas, f"Pitch: {_number(vocal.pitch_semitones if vocal else None, '.1f')}", 166)
         _text(canvas, f"Face: {_face_text(tick)}", 198)
-    _text(canvas, "Not a real distress score yet", height - 20, 0.6)
+    _text(canvas, "Unvalidated research estimate", height - 20, 0.6)
     return canvas
 
 

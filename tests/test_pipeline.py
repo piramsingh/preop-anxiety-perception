@@ -16,6 +16,7 @@ from preop.config import Config, load_config
 from preop.features.audio import F0_COLUMN, HNR_COLUMN, LOUDNESS_COLUMN, VocalWindow
 from preop.features.body import Person
 from preop.pipeline import Pipeline
+from preop.score.scorer import MypasScorer
 from preop.sources.pulse import SimulatedPulseSource
 from preop.sources.video_file import AudioFileSource, VideoFileSource
 
@@ -66,6 +67,7 @@ def test_replay_reaches_a_score_with_both_signals(clip: Path):
         SimulatedPulseSource(period_s=0.2),
         fake_detect,
         VocalWindow(fake_analyzer, window_s=1.0, hop_s=0.5),
+        scorer=MypasScorer(baseline_s=0.5),
     )
     ticks = []
     pipeline.run(ticks.append, duration_s=10, tick_s=0.5)
@@ -74,19 +76,22 @@ def test_replay_reaches_a_score_with_both_signals(clip: Path):
     full = [tick for tick in ticks if tick.body and tick.vocal]
     assert full, "expected a tick with both video and audio features"
     assert full[-1].score.value is not None
-    assert full[-1].score.confidence > 0.9
+    assert set(full[-1].score.items) >= {"activity", "vocalization", "state_of_arousal"}
     assert full[-1].pulse is not None and full[-1].pulse.simulated
-    assert "PLACEHOLDER" in format_tick(full[-1])
+    assert "mYPAS" in format_tick(full[-1])
     assert pipeline.state.frames > 0
 
 
 def test_score_keeps_working_with_video_only(clip: Path):
-    pipeline = Pipeline(VideoFileSource(clip), detect=fake_detect)
+    pipeline = Pipeline(
+        VideoFileSource(clip), detect=fake_detect, scorer=MypasScorer(baseline_s=0.5)
+    )
     ticks = []
     pipeline.run(ticks.append, duration_s=5, tick_s=0.5)
     scored = [tick for tick in ticks if tick.score.value is not None]
     assert scored
     assert scored[-1].vocal is None
+    assert "vocalization" not in scored[-1].score.items
     assert scored[-1].score.confidence < 0.7
 
 

@@ -6,25 +6,48 @@ from preop.config import Config, load_config
 from preop.features.audio import VocalWindow, make_smile_analyzer
 from preop.features.face import FaceExtractor, FaceUnavailable
 from preop.pipeline import Pipeline, Tick
+from preop.score.scorer import DistressScore, MypasScorer
 from preop.sources.mic import MicSource
 from preop.sources.pulse import SimulatedPulseSource
 from preop.sources.video_file import AudioFileSource, VideoFileSource
 from preop.sources.webcam import SourceUnavailable, WebcamSource
+
+ITEM_LABELS = {
+    "activity": "act",
+    "vocalization": "voc",
+    "emotional_expressivity": "exp",
+    "state_of_arousal": "aro",
+    "use_of_parents": "par",
+}
 
 
 def _fmt(value: float | None, spec: str = ".2f") -> str:
     return "--" if value is None else format(value, spec)
 
 
+def format_score(score: DistressScore) -> str:
+    if score.calibrating:
+        return f"calibrating {score.baseline_progress:4.0%}"
+    ratings = " ".join(
+        f"{ITEM_LABELS[name]}={score.items[name].rating:.1f}" if name in score.items
+        else f"{ITEM_LABELS[name]}=--"
+        for name in ITEM_LABELS
+    )  # fmt: skip
+    flag = f" UPSET-AT-BASELINE({','.join(score.upset_during_baseline)})"
+    return (
+        f"mYPAS {_fmt(score.value, '5.1f')}  conf {score.confidence:.2f} [{ratings}]"
+        f"{flag if score.upset_during_baseline else ''}"
+    )
+
+
 def format_tick(tick: Tick) -> str:
-    score = _fmt(tick.score.value, "5.1f") if tick.score.value is not None else "   --"
     body, vocal = tick.body, tick.vocal
     face = "--"
     if tick.face is not None:
         active = " ".join(f"{name}={value:.1f}" for name, value in tick.face.active())
         face = (active or "neutral") if tick.face.detected else "no face"
     return (
-        f"PLACEHOLDER {score}  conf {tick.score.confidence:.2f} | "
+        f"{format_score(tick.score)} | "
         f"people {body.people if body else '--'}  "
         f"activity {_fmt(body.activity if body else None)}  "
         f"parent_dist {_fmt(body.parent_distance if body else None)} | "
@@ -35,17 +58,22 @@ def format_tick(tick: Tick) -> str:
     )
 
 
-def build_pipeline(config: Config) -> Pipeline:
+def build_pipeline(config: Config, opened_camera: WebcamSource | None = None) -> Pipeline:
+    """`opened_camera` is for callers that are not on the main thread, which macOS requires for the
+    camera permission prompt. They open the camera there and pass it in."""
     video = detect = None
+    closers = []
     if config.video.source != "off":
         from preop.features.pose import PoseExtractor
 
         if config.video.source == "webcam":
-            video = WebcamSource(config.video.camera_index)
+            video = opened_camera or WebcamSource(config.video.camera_index)
             video.open()  # On the main thread, so macOS can show its permission prompt.
         else:
             video = VideoFileSource(Path(config.video.path))
-        detect = PoseExtractor(num_poses=config.video.num_poses).detect
+        pose = PoseExtractor(num_poses=config.video.num_poses)
+        detect = pose.detect
+        closers.append(pose.close)
 
     audio = window = None
     if config.audio.source != "off":
@@ -68,9 +96,20 @@ def build_pipeline(config: Config) -> Pipeline:
     if config.video.source != "off" and config.video.openface:
         try:
             face = FaceExtractor.from_paths()
+            closers.append(face.close)
         except FaceUnavailable as error:
             print(f"Face signal off: {error}", flush=True)
-    return Pipeline(video, audio, pulse, detect, window, face.analyze if face else None)
+    pipeline = Pipeline(
+        video,
+        audio,
+        pulse,
+        detect,
+        window,
+        face.analyze if face else None,
+        MypasScorer(config.score.baseline_s),
+    )
+    pipeline.closers = closers
+    return pipeline
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -86,7 +125,10 @@ def main(argv: list[str] | None = None) -> int:
         config.video.source, config.video.path = "file", str(args.video_file)
         config.audio.source, config.audio.path = "file", str(args.video_file)
 
-    print("Placeholder output only: this is not a mYPAS or distress estimate. Ctrl-C to stop.")
+    print(
+        "Unvalidated research estimate on the mYPAS range, not a clinical measure. "
+        f"Stay calm for the first {config.score.baseline_s:.0f} s. Ctrl-C to stop."
+    )
     try:
         pipeline = build_pipeline(config)
         latest_tick: list[Tick] = []
