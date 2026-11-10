@@ -12,3 +12,5 @@ audio:
   opensmile: true
 pulse:
   source: simulated   # simulated | off
+score:
+  baseline_s: 60.0   # calm calibration at the start; no score is shown until it ends

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Lullaby</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="moon" viewBox="0 0 64 64">
+      <path class="moon-body" d="M46 42.5A22 22 0 0 1 24.6 12a23 23 0 1 0 28.5 28.2 22 22 0 0 1-7.1 2.3Z"/>
+      <path class="moon-face" d="M20 33c1.2 1.6 3.4 1.6 4.6 0M30 39.5c1.2 1.6 3.4 1.6 4.6 0M23 44c2.6 2.6 6.4 3 9.6 1.4"/>
+      <path class="moon-star" d="M46 11l1.3 3.7L51 16l-3.7 1.3L46 21l-1.3-3.7L41 16l3.7-1.3ZM56 25l.8 2.2L59 28l-2.2.8L56 31l-.8-2.2L53 28l2.2-.8Z"/>
+    </symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="2"/><path d="M6 11l4-3 4 2 3 3M10 8l1 6-3 7M11 14l4 3 1 4"/></symbol>
+    <symbol id="i-voice" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></symbol>
+    <symbol id="i-face" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 10v.5M15 10v.5M8.5 15c2 1.8 5 1.8 7 0"/></symbol>
+    <symbol id="i-arousal" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6h5"/></symbol>
+    <symbol id="i-parents" viewBox="0 0 24 24"><circle cx="8.5" cy="7" r="3"/><circle cx="17" cy="11" r="2.2"/><path d="M3 20c0-3.5 2.4-6 5.5-6s5.5 2.5 5.5 6M15 20c0-2 .5-3.6 2-3.6s3.500 1.600 3.500 3.600"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3ZM12 10v4.500M12 17.300v.2"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-flat" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.500" y="6.500" width="11" height="11" rx="2.500"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="brand"><svg class="brand-moon" aria-hidden="true"><use href="#moon"/></svg><span>Lullaby</span></div>
+  <div class="bar-end">
+    <span id="status" class="pill" role="status" hidden></span>
+    <button id="stop" class="btn btn-quiet" type="button" hidden>
+      <svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg>Stop
+    </button>
+    <button id="new" class="btn btn-quiet" type="button" hidden>New session</button>
+  </div>
+</header>
+
+<main id="start" class="start" hidden>
+  <form id="start-form" class="start-card">
+    <svg class="start-moon" aria-hidden="true"><use href="#moon"/></svg>
+    <h1>Ready when you are</h1>
+    <p class="lede">Watches and listens, then follows distress on the mYPAS range.</p>
+
+    <fieldset class="field">
+      <legend>Watch</legend>
+      <div class="segments" data-count="2">
+        <label><input type="radio" name="source" value="camera" checked><span>Camera and mic</span></label>
+        <label><input type="radio" name="source" value="file"><span>A video file</span></label>
+      </div>
+    </fieldset>
+
+    <div id="path-field" class="field" hidden>
+      <label for="path" class="legend">Path to the video</label>
+      <input id="path" class="text" type="text" spellcheck="false" autocomplete="off" placeholder="~/Movies/clip.mp4">
+    </div>
+
+    <fieldset class="field">
+      <legend>Calm baseline</legend>
+      <div class="segments" data-count="3">
+        <label><input type="radio" name="baseline" value="30"><span>30 sec</span></label>
+        <label><input type="radio" name="baseline" value="60" checked><span>1 min</span></label>
+        <label><input type="radio" name="baseline" value="120"><span>2 min</span></label>
+      </div>
+      <p id="baseline-hint" class="hint"></p>
+    </fieldset>
+
+    <p id="start-error" class="notice notice-alert" role="alert" hidden></p>
+    <button id="start-button" class="btn btn-primary" type="submit">Start</button>
+    <button id="back" class="btn btn-link" type="button" hidden>Back to the last session</button>
+    <p class="hint center">Everything stays on this computer. Nothing is saved.</p>
+  </form>
+</main>
+
+<main id="session" class="session" hidden>
+  <p id="session-notice" class="notice notice-alert span-all" role="alert" hidden></p>
+
+  <section class="card score-card" aria-labelledby="score-title">
+    <h2 id="score-title" class="card-title">Distress score</h2>
+    <div class="gauge">
+      <svg viewBox="0 0 240 216" aria-hidden="true">
+        <path class="gauge-track" pathLength="100" d="M52.1 187.900a96 96 0 1 1 135.800 0"/>
+        <path id="gauge-fill" class="gauge-fill" pathLength="100" stroke-dasharray="0 100" d="M52.1 187.900a96 96 0 1 1 135.800 0"/>
+      </svg>
+      <div id="gauge-center" class="gauge-center">
+        <svg id="gauge-moon" class="gauge-moon" aria-hidden="true"><use href="#moon"/></svg>
+        <output id="score-value" class="score-value" aria-live="off">--</output>
+      </div>
+      <span class="gauge-min">23</span><span class="gauge-max">100</span>
+    </div>
+    <div id="score-copy" class="score-copy">
+      <p id="score-headline" class="score-headline"></p>
+      <p id="score-sub" class="hint center"></p>
+    </div>
+    <p class="fine center">Automatic estimate. Not validated and not a clinician rating.</p>
+  </section>
+
+  <section class="card chart-card" aria-labelledby="chart-title">
+    <div class="card-head">
+      <h2 id="chart-title" class="card-title">Score over time</h2>
+      <p id="session-name" class="hint"></p>
+    </div>
+    <div id="chart" class="chart"></div>
+    <details class="numbers">
+      <summary>See the numbers</summary>
+      <table>
+        <thead><tr><th scope="col">Time</th><th scope="col">Score</th><th scope="col">Confidence</th></tr></thead>
+        <tbody id="numbers-body"></tbody>
+      </table>
+    </details>
+  </section>
+
+  <section class="card signals-card" aria-labelledby="signals-title">
+    <h2 id="signals-title" class="card-title">What it can see and hear</h2>
+    <ul id="signals" class="signals"></ul>
+  </section>
+
+  <section class="card items-card" aria-labelledby="items-title">
+    <h2 id="items-title" class="card-title">The five mYPAS items</h2>
+    <ul id="items" class="items"></ul>
+  </section>
+
+  <section class="card camera-card" aria-labelledby="camera-title">
+    <div class="card-head">
+      <h2 id="camera-title" class="card-title">Camera</h2>
+      <button id="camera-toggle" class="btn btn-small" type="button">Hide</button>
+    </div>
+    <div id="camera-frame" class="camera-frame">
+      <img id="camera" alt="Live view with tracked body points">
+      <p id="camera-empty" class="hint center">Camera view is off</p>
+    </div>
+    <p class="fine">Shown here only. Never recorded.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

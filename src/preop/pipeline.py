@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from preop.features.audio import VocalFeatures, VocalWindow
 from preop.features.body import BodyFeatures, BodyTracker, Person
 from preop.features.face import FaceFeatures, FaceUnavailable
-from preop.score.placeholder import PlaceholderScore, placeholder_score
+from preop.score.scorer import DistressScore, MypasScorer
 from preop.sources import Source
 from preop.types import AudioChunk, PulseSample, VideoFrame
 
@@ -36,7 +36,7 @@ class State:
 @dataclass(frozen=True)
 class Tick:
     t: float
-    score: PlaceholderScore
+    score: DistressScore
     body: BodyFeatures | None
     vocal: VocalFeatures | None
     pulse: PulseSample | None
@@ -52,13 +52,24 @@ class Pipeline:
         detect: Callable[[float, object], list[Person]] | None = None,
         vocal_window: VocalWindow | None = None,
         analyze_face: Callable[[float, object], FaceFeatures] | None = None,
+        scorer: MypasScorer | None = None,
     ) -> None:
         self._video, self._audio, self._pulse = video, audio, pulse
         self._detect = detect
         self._vocal_window = vocal_window
         self._analyze_face = analyze_face
+        self._scorer = scorer or MypasScorer()
         self._stopping = threading.Event()
         self.state = State()
+        self.closers: list[Callable[[], None]] = []  # Release models when the session ends.
+
+    @property
+    def face_enabled(self) -> bool:
+        return self._analyze_face is not None
+
+    def latest_frame(self) -> tuple[object | None, list[Person], float | None]:
+        with self.state.lock:
+            return self.state.latest_image, self.state.latest_people, self.state.latest_image_t
 
     def _guarded(self, target: Callable[[], None]) -> threading.Thread:
         def run() -> None:
@@ -122,6 +133,7 @@ class Pipeline:
                 self.state.pulse = sample
 
     def snapshot(self, now: float) -> Tick:
+        """Advances the scorer, so call it once per tick."""
         with self.state.lock:
             body, vocal, pulse = self.state.body, self.state.vocal, self.state.pulse
             face = self.state.face
@@ -129,11 +141,7 @@ class Pipeline:
         vocal = vocal if vocal is not None and now - vocal.t <= STALE_AFTER_S else None
         pulse = pulse if pulse is not None and now - pulse.t <= STALE_AFTER_S else None
         face = face if face is not None and now - face.t <= STALE_AFTER_S else None
-        score = placeholder_score(
-            body.activity if body else None,
-            vocal.dbfs if vocal else None,
-            body.confidence if body else 1.0,
-        )
+        score = self._scorer.update(now, body, vocal, face, pulse)
         return Tick(now, score, body, vocal, pulse, face)
 
     def run(

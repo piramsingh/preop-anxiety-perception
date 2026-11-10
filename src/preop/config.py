@@ -29,10 +29,16 @@ class PulseConfig:
 
 
 @dataclass
+class ScoreConfig:
+    baseline_s: float = 60.0
+
+
+@dataclass
 class Config:
     video: VideoConfig = field(default_factory=VideoConfig)
     audio: AudioConfig = field(default_factory=AudioConfig)
     pulse: PulseConfig = field(default_factory=PulseConfig)
+    score: ScoreConfig = field(default_factory=ScoreConfig)
 
 
 def load_config(path: Path | None) -> Config:
@@ -43,4 +49,5 @@ def load_config(path: Path | None) -> Config:
         video=VideoConfig(**(raw.get("video") or {})),
         audio=AudioConfig(**(raw.get("audio") or {})),
         pulse=PulseConfig(**(raw.get("pulse") or {})),
+        score=ScoreConfig(**(raw.get("score") or {})),
     )
