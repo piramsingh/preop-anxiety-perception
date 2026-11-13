@@ -1,0 +1,257 @@
+===== app run 2026-11-12 18:38 =====
+2026-11-12 18:25:27,715 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:25:32,720 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+
+[exited with code 143]
+
+===== app run 2026-11-12 18:38 =====
+2026-11-12 18:38:20,164 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:38:25,170 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 18:38:25,389 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 401 Unauthorized"
+
+[exited with code 143]
+
+===== app run 2026-11-12 18:44 =====
+2026-11-12 18:38:58,389 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:39:03,396 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 18:39:03,686 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 18:39:18,811 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:19,991 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:21,428 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:22,476 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:23,221 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:24,049 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:24,900 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:39:26,671 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:31,463 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:31,485 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:41,483 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:42,571 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:44,304 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:46,210 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:47,743 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:49,560 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:52,052 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:53,913 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:55,693 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:57,284 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:58,340 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:58,983 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:41:59,762 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:00,398 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:01,185 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:01,883 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:02,903 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:04,129 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:05,800 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:06,453 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:07,051 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:07,902 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:09,050 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:10,641 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:11,345 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:11,942 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:13,664 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:14,748 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:17,123 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:19,953 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:22,095 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:23,209 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:42:24,213 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+
+[exited with code 143]
+
+===== app run 2026-11-12 18:52 =====
+2026-11-12 18:44:43,503 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:44:48,512 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 18:44:48,660 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 18:44:48,925 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 18:44:49.026] [ctranslate2] [thread 13577850] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 18:44:49,058 lullaby.listen: Whisper base.en ready
+2026-11-12 18:45:28,713 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:45:29,596 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:46:49,075 faster_whisper: Processing audio with duration 00:05.339
+2026-11-12 18:46:49,103 faster_whisper: VAD filter removed 00:04.059 of audio
+2026-11-12 18:46:50,198 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:46:50,208 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 18:47:15,866 faster_whisper: Processing audio with duration 00:05.328
+2026-11-12 18:47:15,877 faster_whisper: VAD filter removed 00:05.328 of audio
+2026-11-12 18:49:55,889 faster_whisper: Processing audio with duration 00:02.340
+2026-11-12 18:49:55,896 faster_whisper: VAD filter removed 00:00.304 of audio
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
+
+===== app run 2026-11-12 18:57 =====
+2026-11-12 18:52:23,158 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:52:28,163 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 18:52:28,293 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 18:52:28,544 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 18:52:28.633] [ctranslate2] [thread 13593506] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 18:52:28,662 lullaby.listen: Whisper base.en ready
+2026-11-12 18:53:16,049 faster_whisper: Processing audio with duration 00:04.860
+2026-11-12 18:53:16,134 faster_whisper: VAD filter removed 00:02.736 of audio
+2026-11-12 18:53:17,209 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
+
+===== app run 2026-11-12 19:00 =====
+2026-11-12 18:57:13,294 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 18:57:18,303 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 18:57:18,450 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 18:57:18,770 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 18:57:18.876] [ctranslate2] [thread 13601410] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 18:57:18,909 lullaby.listen: Whisper base.en ready
+
+[exited with code 143]
+
+===== app run 2026-11-12 19:21 =====
+2026-11-12 19:00:07,717 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host reachy-mini.local.
+2026-11-12 19:00:12,724 lullaby.robot: Robot not connected (Auto connection: both localhost and remote attempts failed. Make sure a Reachy Mini daemon is running and accessible.). Running in preview mode.
+2026-11-12 19:00:12,880 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 19:00:13,118 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 19:00:13.207] [ctranslate2] [thread 13607682] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 19:00:13,236 lullaby.listen: Whisper base.en ready
+2026-11-12 19:00:33,226 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:00:34,124 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:00:58,692 faster_whisper: Processing audio with duration 00:02.440
+2026-11-12 19:00:58,718 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:01:20,613 faster_whisper: Processing audio with duration 00:01.850
+2026-11-12 19:01:20,618 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:01:22,065 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:22,117 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:23,139 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:24,383 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:24,968 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:26,525 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:01:27,693 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
+
+===== app run 2026-11-12 19:47 =====
+2026-11-12 19:22:08,153 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host 192.168.8.122.
+2026-11-12 19:22:08,193 reachy_mini.reachy_mini: Connection mode selected: network
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:171: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(media_backend, log_level)
+2026-11-12 19:22:08,685 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 19:22:08,772 reachy_mini.reachy_mini: Media released — camera/mic available for direct access.
+2026-11-12 19:22:08,772 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 19:22:09,415 lullaby.robot: Connected to Reachy Mini at http://192.168.8.122:8000
+2026-11-12 19:22:09,668 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 19:22:10,041 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 19:22:10.138] [ctranslate2] [thread 13633324] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 19:22:10,167 lullaby.listen: Whisper base.en ready
+2026-11-12 19:22:10,886 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:05,908 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:06,813 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:30,735 faster_whisper: Processing audio with duration 00:01.530
+2026-11-12 19:23:30,762 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:23:52,081 faster_whisper: Processing audio with duration 00:01.190
+2026-11-12 19:23:52,085 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:23:54,851 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:54,860 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:56,072 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:57,209 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:23:58,826 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:00,791 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:02,097 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:03,825 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:05,649 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:07,101 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:08,542 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:09,853 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:10,910 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:12,070 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:13,280 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:14,797 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:15,370 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:16,997 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:18,017 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:19,935 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:22,677 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:24,789 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:24:26,082 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:238: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(self._media_backend, self._log_level)
+2026-11-12 19:47:28,996 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 19:47:28,996 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 19:47:28,997 reachy_mini.reachy_mini: Media re-acquired by daemon.
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
+
+===== app run 2026-11-12 19:51 =====
+2026-11-12 19:47:28,748 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host 192.168.8.122.
+2026-11-12 19:47:28,778 reachy_mini.reachy_mini: Connection mode selected: network
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:171: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(media_backend, log_level)
+2026-11-12 19:47:29,487 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 19:47:29,601 reachy_mini.reachy_mini: Media released — camera/mic available for direct access.
+2026-11-12 19:47:29,602 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 19:47:30,252 lullaby.robot: Connected to Reachy Mini at http://192.168.8.122:8000
+2026-11-12 19:47:30,432 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 19:47:30,737 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 19:47:30.831] [ctranslate2] [thread 13693692] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 19:47:30,864 lullaby.listen: Whisper base.en ready
+2026-11-12 19:47:47,319 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:47:48,468 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:14,549 faster_whisper: Processing audio with duration 00:02.320
+2026-11-12 19:48:14,578 faster_whisper: VAD filter removed 00:00.624 of audio
+2026-11-12 19:48:15,642 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:15,751 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:38,582 faster_whisper: Processing audio with duration 00:01.810
+2026-11-12 19:48:38,587 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:48:40,300 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:41,810 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:42,702 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:44,307 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:48:45,805 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:238: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(self._media_backend, self._log_level)
+2026-11-12 19:51:15,737 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 19:51:15,738 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 19:51:15,738 reachy_mini.reachy_mini: Media re-acquired by daemon.
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
+
+===== app run 2026-11-12 19:54 =====
+2026-11-12 19:51:20,714 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host 192.168.8.122.
+2026-11-12 19:51:20,743 reachy_mini.reachy_mini: Connection mode selected: network
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:171: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(media_backend, log_level)
+2026-11-12 19:51:21,654 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 19:51:21,753 reachy_mini.reachy_mini: Media released — camera/mic available for direct access.
+2026-11-12 19:51:21,754 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 19:51:22,401 lullaby.robot: Connected to Reachy Mini at http://192.168.8.122:8000
+2026-11-12 19:51:22,568 httpx: HTTP Request: GET https://api.elevenlabs.io/v1/voices/3Ho05jaHjjiQCVF9aGjs "HTTP/1.1 200 OK"
+2026-11-12 19:51:22,840 httpx: HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base.en/revision/main "HTTP/1.1 401 Unauthorized"
+[2026-11-12 19:51:22.930] [ctranslate2] [thread 13700495] [warning] Tip: experimental MPS backend is available and often 2x+ faster than CPU on Apple Silicon (varies by workload and hardware). Try device="mps".
+2026-11-12 19:51:22,958 lullaby.listen: Whisper base.en ready
+2026-11-12 19:52:00,513 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:52:01,582 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:52:29,563 faster_whisper: Processing audio with duration 00:05.130
+2026-11-12 19:52:29,597 faster_whisper: VAD filter removed 00:02.592 of audio
+2026-11-12 19:52:30,993 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:52:31,113 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:53:35,624 faster_whisper: Processing audio with duration 00:03.010
+2026-11-12 19:53:35,631 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:53:36,935 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:53:37,061 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:54:18,880 faster_whisper: Processing audio with duration 00:02.200
+2026-11-12 19:54:18,885 faster_whisper: VAD filter removed 00:00.240 of audio
+2026-11-12 19:54:42,344 faster_whisper: Processing audio with duration 00:01.780
+2026-11-12 19:54:42,348 faster_whisper: VAD filter removed 00:00.000 of audio
+2026-11-12 19:54:43,942 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:54:45,430 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:54:46,160 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:54:47,879 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+2026-11-12 19:54:49,255 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+

@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lullaby Companion</title>
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    color-scheme: light dark;
+    --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --muted: #63636b; --line: rgba(60, 60, 67, .16);
+    --soft: #eef0f6; --soft-2: #e4e7f0;
+    --accent: #1263d6; --accent-ink: #ffffff; --accent-soft: rgba(18, 99, 214, .11);
+    --ok: #1f7a3a; --ok-soft: rgba(31, 122, 58, .12);
+    --warn: #a04a00; --warn-soft: rgba(196, 98, 0, .13);
+    --stop: #cf2a1c; --stop-soft: rgba(207, 42, 28, .12);
+    --night: #33386e; --night-ink: #eceeff; --night-glow: rgba(110, 120, 230, .55);
+    --glass: rgba(250, 250, 252, .78);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(20, 22, 40, .06);
+    --spring: cubic-bezier(.22, 1, .36, 1);        /* critically damped feel: fast start, soft settle */
+    --bounce: cubic-bezier(.3, 1.45, .45, 1);      /* small overshoot, used sparingly */
+    --r: 20px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e11; --card: #1c1c20; --ink: #f4f4f7; --muted: #a3a3ad; --line: rgba(255, 255, 255, .13);
+      --soft: #26262c; --soft-2: #303038;
+      --accent: #5aa2ff; --accent-ink: #04162d; --accent-soft: rgba(90, 162, 255, .16);
+      --ok: #3fce6d; --ok-soft: rgba(63, 206, 109, .15);
+      --warn: #ffab40; --warn-soft: rgba(255, 171, 64, .15);
+      --stop: #e2483a; --stop-soft: rgba(226, 72, 58, .18);
+      --night: #3b4183; --night-ink: #eceeff; --night-glow: rgba(130, 140, 255, .5);
+      --glass: rgba(24, 24, 28, .74);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    }
+  }
+
+  /* ---------- base ---------- */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: clip;
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  .ic { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .ic.fill { fill: currentColor; }
+
+  button { font: inherit; cursor: pointer; border-radius: 14px; border: 0; min-height: 44px;
+    background: var(--soft); color: var(--ink); padding: 10px 16px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    transition: transform .35s var(--spring), background-color .2s, color .2s, opacity .2s, box-shadow .2s; }
+  button:active:not(:disabled) { transform: scale(.96); transition-duration: .08s; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  input { font: inherit; width: 100%; min-height: 48px; padding: 11px 14px; border-radius: 14px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    transition: border-color .2s, box-shadow .2s; }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  label, .label { display: block; font-size: 14px; color: var(--muted); margin: 0 0 6px; }
+
+  /* ---------- top bar (translucent, content scrolls under it) ---------- */
+  header { position: sticky; top: 0; z-index: 5; background: var(--glass);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--line); }
+  .bar, #status, nav, main { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .bar { padding: 10px 16px 6px; display: flex; gap: 10px; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 6px; color: var(--night); }
+  @media (prefers-color-scheme: dark) { .brand { color: #aab1ff; } }
+  .brand h1 { font-size: 19px; margin: 0; letter-spacing: -.02em; color: var(--ink); }
+  #conn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; min-width: 0;
+    padding: 5px 10px; border-radius: 99px; background: var(--soft); color: var(--muted);
+    transition: background-color .3s, color .3s; white-space: nowrap; }
+  #conn.robot { color: var(--ok); background: var(--ok-soft); }
+  #conn.preview { color: var(--warn); background: var(--warn-soft); }
+  #conn.offline { color: var(--stop); background: var(--stop-soft); }
+  #conn .long { font-weight: 500; }
+  #voice { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; color: var(--muted);
+    white-space: nowrap; padding: 5px 8px; border-radius: 99px; transition: background-color .3s, color .3s; }
+  #voice:empty { display: none; }
+  #voice.problem { color: var(--warn); background: var(--warn-soft); }
+  @media (max-width: 600px) { #conn .long, #voice .long { display: none; } .bar { gap: 8px; } }
+  .spacer { flex: 1; }
+  #stopBtn { background: var(--stop); color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 99px;
+    box-shadow: 0 2px 8px var(--stop-soft); }
+  #stopBtn.busy { opacity: .6; }
+
+  /* live robot status */
+  #status { padding: 2px 16px 10px; display: flex; align-items: center; gap: 12px; min-height: 54px; }
+  .orb { position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%;
+    background: var(--soft); color: var(--muted); transition: background-color .5s, color .5s; }
+  .orb > * { position: absolute; inset: 0; margin: auto; opacity: 0; transform: scale(.6);
+    transition: opacity .3s, transform .45s var(--spring); }
+  .orb::after { content: ""; position: absolute; inset: -5px; border-radius: 50%;
+    border: 2px solid var(--night-glow); opacity: 0; transition: opacity .6s; pointer-events: none; }
+  #status[data-activity="idle"] .o-idle,
+  #status[data-activity="talking"] .o-talk,
+  #status[data-activity="recovery"] .o-quiet { opacity: 1; transform: none; }
+  #status[data-activity="talking"] .orb { background: var(--accent); color: var(--accent-ink); }
+  #status[data-activity="recovery"] .orb { background: var(--night); color: var(--night-ink);
+    animation: breatheGlow 10s infinite; }
+  #status[data-activity="recovery"] .orb::after { opacity: 1; animation: breatheRing 10s infinite; }
+  #statusText { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    transition: color .3s; }
+  #status[data-activity="talking"] #statusText { color: var(--ink); font-weight: 500; }
+  #status[data-activity="recovery"] #statusText { color: var(--ink); }
+  #status.error #statusText { color: var(--warn); }
+
+  /* sound-wave bars, used in the status orb and the Play button */
+  .wave { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 22px; height: 20px; }
+  .wave i { width: 3px; height: 100%; border-radius: 2px; background: currentColor; transform: scaleY(.3);
+    animation: wave 1s ease-in-out infinite; }
+  .wave i:nth-child(2) { animation-delay: -.75s; } .wave i:nth-child(3) { animation-delay: -.35s; }
+  .wave i:nth-child(4) { animation-delay: -.55s; }
+  @keyframes wave { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+
+  /* recovery breathing: 4 s in, 6 s out, same cycle as the robot */
+  @keyframes breatheGlow {
+    0% { box-shadow: 0 0 0 0 var(--night-glow); animation-timing-function: ease-in-out; }
+    40% { box-shadow: 0 0 18px 4px var(--night-glow); animation-timing-function: ease-in-out; }
+    100% { box-shadow: 0 0 0 0 var(--night-glow); } }
+  @keyframes breatheRing {
+    0% { transform: scale(.92); opacity: .25; animation-timing-function: ease-in-out; }
+    40% { transform: scale(1.22); opacity: .9; animation-timing-function: ease-in-out; }
+    100% { transform: scale(.92); opacity: .25; } }
+  @keyframes breatheBall {
+    0% { transform: scale(.78); animation-timing-function: ease-in-out; }
+    40% { transform: scale(1); animation-timing-function: ease-in-out; }
+    100% { transform: scale(.78); } }
+
+  /* ---------- stage tabs: segmented control with a sliding thumb ---------- */
+  nav { margin-top: 16px; padding: 0 16px; }
+  .tabs { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px;
+    background: var(--soft-2); border-radius: 18px; }
+  .tabs .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3);
+    border-radius: 14px; background: var(--card); box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 3px 10px rgba(0, 0, 0, .06);
+    transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .5s var(--spring); }
+  .tabs button { position: relative; background: transparent; color: var(--muted); font-size: 15px; font-weight: 600;
+    padding: 8px 4px; min-height: 48px; border-radius: 14px; line-height: 1.15; }
+  .tabs button.on { color: var(--ink); }
+  .tabs button.on .ic { color: var(--accent); }
+  @media (max-width: 520px) { .tabs button { flex-direction: column; gap: 3px; font-size: 13px; min-height: 58px; } }
+
+  /* ---------- cards ---------- */
+  main { padding: 16px 16px 90px; }
+  .card { background: var(--card); border-radius: var(--r); padding: 20px; box-shadow: var(--shadow); }
+  .card + .card, .card + details.card { margin-top: 14px; }
+  h2 { margin: 0 0 4px; font-size: 24px; line-height: 1.15; letter-spacing: -.022em; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 15px; }
+  .two { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .two { grid-template-columns: 1fr; } .card { padding: 16px; } }
+
+  .big { width: 100%; min-height: 60px; padding: 16px; font-size: 20px; font-weight: 700; border-radius: 18px;
+    background: var(--accent); color: var(--accent-ink); letter-spacing: -.01em; }
+  .big.night { background: var(--night); color: var(--night-ink); }
+  .ghost { background: transparent; color: var(--accent); }
+  .quiet-link { background: transparent; color: var(--muted); font-size: 14px; }
+
+  /* view transitions (same path forward and back, mirrored) */
+  .in-fwd { animation: inFwd .45s var(--spring) both; }
+  .in-back { animation: inBack .45s var(--spring) both; }
+  .in-fade { animation: inFade .35s ease both; }
+  @keyframes inFwd { from { opacity: 0; transform: translateX(28px); } }
+  @keyframes inBack { from { opacity: 0; transform: translateX(-28px); } }
+  @keyframes inFade { from { opacity: 0; } }
+
+  /* ---------- step view ---------- */
+  .progress { display: flex; gap: 5px; margin: -8px 0 6px; }
+  .seg { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0; background: transparent; border-radius: 8px;
+    transition: flex-grow .5s var(--spring); }
+  .seg:active:not(:disabled) { transform: none; }
+  .seg span { display: block; width: 100%; height: 6px; border-radius: 3px; background: var(--soft-2); overflow: hidden;
+    transition: height .3s var(--spring); }
+  .seg i { display: block; height: 100%; border-radius: 3px; background: var(--ok); transform: scaleX(0);
+    transform-origin: left; transition: transform .5s var(--spring), background-color .4s; }
+  .seg.done i { transform: none; }
+  .seg.cur { flex-grow: 2.6; }
+  .seg.cur span { height: 8px; }
+  .seg.cur i { transform: none; background: var(--accent); }
+  .seg:hover span { height: 9px; }
+
+  .stepHead { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .tile { width: 48px; height: 48px; flex: none; border-radius: 14px; display: grid; place-items: center;
+    background: var(--accent-soft); color: var(--accent); font-size: 21px; }
+  .tile.night { background: var(--night); color: var(--night-ink); }
+  .stepHead h2 { margin: 2px 0 0; }
+  .count { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; color: var(--ok); background: var(--ok-soft);
+    font-size: 13px; font-weight: 600; padding: 2px 9px 2px 7px; border-radius: 99px;
+    animation: pop .5s var(--bounce) both; }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } }
+
+  .tip { display: flex; gap: 10px; align-items: baseline; font-size: 16px; margin: 0 0 16px; }
+  .tip b { flex: none; color: var(--accent); background: var(--accent-soft); font-size: 13px; padding: 2px 9px;
+    border-radius: 99px; letter-spacing: .01em; }
+
+  .says { background: var(--soft); border-radius: 16px; margin: 14px 0 16px; overflow: hidden; }
+  .saysHead { display: flex; align-items: center; gap: 7px; padding: 12px 16px 4px; font-size: 12px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .saysLines { position: relative; padding: 4px 8px 22px; max-height: min(42vh, 330px); overflow-y: auto;
+    overscroll-behavior: contain; scroll-behavior: smooth;
+    -webkit-mask-image: linear-gradient(#000 calc(100% - 26px), transparent);
+    mask-image: linear-gradient(#000 calc(100% - 26px), transparent); }
+  .saysLines p { position: relative; margin: 0; padding: 7px 10px; font-size: 16px; border-radius: 10px;
+    transition: color .4s, opacity .4s; }
+  .says.playing p { color: var(--muted); }
+  .says.playing p.past { opacity: .6; }
+  .says.playing p.now { color: var(--ink); opacity: 1; }
+  .hl { position: absolute; left: 8px; right: 8px; top: 0; height: 0; border-radius: 10px; background: var(--card);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06), inset 3px 0 0 var(--accent); opacity: 0; pointer-events: none;
+    transition: transform .55s var(--spring), opacity .3s; }
+  .says.playing .hl.onLine { opacity: 1; }
+
+  .blocked { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--warn); background: var(--warn-soft);
+    border-radius: 14px; padding: 8px 8px 8px 14px; margin: 0 0 14px; font-size: 15px; }
+  .blocked span { flex: 1; min-width: 160px; }
+  .blocked button { background: var(--card); color: var(--ink); }
+
+  /* Play button: three labels stacked in one cell, cross-fading */
+  .playBtn { display: grid; }
+  .playBtn .st { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    opacity: 0; transform: scale(.9); transition: opacity .2s, transform .4s var(--spring); }
+  .playBtn[data-state="play"] .st-play, .playBtn[data-state="again"] .st-again,
+  .playBtn[data-state="playing"] .st-playing { opacity: 1; transform: none; }
+  .playBtn[data-state="playing"]:disabled { opacity: 1; background: var(--accent-soft); color: var(--accent); }
+
+  .navrow { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+  .navrow button { background: transparent; color: var(--muted); padding: 10px 12px; }
+  .navrow button.fwd { color: var(--accent); }
+
+  /* breathe-along guide */
+  .breath { display: grid; place-items: center; margin: 4px 0 6px; padding: 10px 0; }
+  .breath .stage { position: relative; width: 210px; height: 210px; display: grid; place-items: center; }
+  .breath .halo, .breath .ball { position: absolute; inset: 0; border-radius: 50%; transform: scale(.6);
+    transition: transform .8s var(--spring), opacity .8s; }
+  .breath .halo { background: var(--accent-soft); }
+  .breath .ball { inset: 22px; background: radial-gradient(circle at 35% 30%, #8fc1ff, var(--accent)); opacity: .85;
+    box-shadow: 0 10px 30px var(--accent-soft); }
+  .breath .word { position: relative; font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -.01em;
+    text-shadow: 0 1px 6px rgba(0, 20, 60, .35); text-align: center; padding: 0 30px; }
+  .breath[data-phase="idle"] .word { color: var(--accent); text-shadow: none; font-size: 15px; font-weight: 600; }
+  .breath[data-phase="idle"] .ball { opacity: .16; box-shadow: none; }
+  .breath[data-phase="in"] .ball { transform: scale(1); opacity: 1; transition: transform 3s cubic-bezier(.4, 0, .3, 1), opacity 1s; }
+  .breath[data-phase="in"] .halo { transform: scale(1); transition: transform 3s cubic-bezier(.3, 0, .2, 1); }
+  .breath[data-phase="out"] .ball { transform: scale(.68); transition: transform 4s cubic-bezier(.4, 0, .4, 1), opacity 1s; }
+  .breath[data-phase="out"] .halo { transform: scale(.64); transition: transform 4s cubic-bezier(.5, 0, .5, 1); }
+  .breath[data-phase="done"] .ball { background: radial-gradient(circle at 35% 30%, #8be0a4, var(--ok)); }
+
+  /* themes */
+  .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 6px 0 12px; }
+  @media (max-width: 520px) { .themes { grid-template-columns: repeat(2, 1fr); } }
+  .theme { position: relative; flex-direction: column; gap: 2px; text-align: center; padding: 12px 6px; font-size: 15px;
+    min-height: 92px; border-radius: 18px; box-shadow: inset 0 0 0 0 var(--accent); }
+  .theme .em { display: block; font-size: 36px; line-height: 1.15; transition: transform .5s var(--bounce); }
+  .theme .tick { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; display: grid;
+    place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 13px;
+    opacity: 0; transform: scale(.4); transition: opacity .2s, transform .45s var(--bounce); }
+  .theme .tick .ic { stroke-width: 3; }
+  .theme.on { background: var(--accent-soft); box-shadow: inset 0 0 0 3px var(--accent); font-weight: 600; }
+  .theme.on .tick { opacity: 1; transform: none; }
+  .theme.on .em { transform: scale(1.12); }
+  .wide { width: 100%; margin-bottom: 16px; }
+
+  /* parent messages */
+  .msg { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--line); }
+  .msg:first-of-type { border-top: 0; }
+  .msg .name { flex: 1 1 170px; min-width: 0; font-weight: 600; }
+  .msg .name small { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
+  .msg .state { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .msg .state.ok { color: var(--ok); }
+  .msg .btns { display: flex; gap: 8px; flex: none; align-items: center; }
+  .msg.recording { background: var(--stop-soft); margin: 0 -12px; padding: 12px; border-radius: 14px; border-top-color: transparent; }
+  .msg.recording + .msg { border-top-color: transparent; }
+  .recNow { display: inline-flex; align-items: center; gap: 8px; color: var(--stop); font-weight: 600;
+    font-variant-numeric: tabular-nums; font-size: 15px; }
+  .recDot { width: 12px; height: 12px; border-radius: 50%; background: var(--stop); animation: recPulse 1.2s ease-in-out infinite; }
+  @keyframes recPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--stop-soft); }
+    50% { transform: scale(.8); box-shadow: 0 0 0 7px var(--stop-soft); } }
+  .rec { background: var(--stop); color: #fff; font-weight: 600; }
+
+  /* quiet mode */
+  .quietOrb { display: grid; place-items: center; margin: 6px 0 12px; padding: 22px 0 8px; }
+  .quietOrb .o { position: relative; width: 116px; height: 116px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--night); color: var(--night-ink); font-size: 40px; animation: breatheBall 10s infinite, breatheGlow 10s infinite; }
+  .quietOrb .o::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 2px solid var(--night-glow);
+    animation: breatheRing 10s infinite; }
+  .quietOrb small { margin-top: 26px; color: var(--muted); font-size: 14px; }
+  /* automatic onboarding: the one big button; single-step Play is the quieter manual option */
+  .stepCard .playBtn { background: var(--soft); color: var(--accent); border: 1px solid var(--line); box-shadow: none; }
+  .stepCard .playBtn[data-state="playing"] { color: var(--accent); }
+  .autoCard { display: grid; gap: 10px; }
+  .autoCard small { color: var(--muted); font-size: 14px; display: block; }
+  .autoCard.running { border-color: var(--accent); }
+  .autoRow { display: flex; gap: 12px; align-items: center; }
+  .autoDot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent); animation: autoPulse 1.6s ease-out infinite; }
+  @keyframes autoPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+    100% { box-shadow: 0 0 0 12px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .autoDot { animation: none; } }
+  /* listening for the child's answer */
+  .listen { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin: 0 0 14px;
+    border-radius: 18px; background: var(--soft); }
+  .listen .mic { flex: none; position: relative; width: 52px; height: 52px; min-height: 52px; padding: 0; border-radius: 50%;
+    display: inline-grid; place-items: center; background: var(--card); color: var(--accent); border-color: var(--line); }
+  .listen .mic .ic { margin: 0; width: 24px; height: 24px; }
+  .listen .mic::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--stop);
+    opacity: 0; transform: scale(var(--lvl, 1)); transition: transform .08s linear, opacity .2s; }
+  .listen[data-state="listening"] .mic { background: var(--stop); color: #fff; border-color: var(--stop); }
+  .listen[data-state="listening"] .mic::after { opacity: .45; }
+  .listen[data-state="working"] .mic { animation: lspin 1.2s linear infinite; }
+  @keyframes lspin { 50% { opacity: .5; } }
+  .listen .lmid { flex: 1; min-width: 0; display: grid; gap: 4px; }
+  .listen .ltitle { font-weight: 600; font-size: 15px; }
+  .listen .lstate { font-size: 14px; color: var(--muted); }
+  .listen[data-state="heard"] .lstate b { color: var(--ok); }
+  .listen[data-state="nothing"] .lstate, .listen[data-state="error"] .lstate { color: var(--warn); }
+  @media (prefers-reduced-motion: reduce) { .listen .mic::after { transition: none; } .listen[data-state="working"] .mic { animation: none; } }
+  /* audio players for parent messages */
+  .player { flex: 1 1 100%; display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .player .pp { flex: none; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%;
+    display: inline-grid; place-items: center; background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .player .pp:active { transform: scale(.92); }
+  .player .pp .ic { margin: 0; }
+  .player .pp .ic.fill { fill: currentColor; }
+  .player .mid { flex: 1; min-width: 0; display: grid; gap: 6px; }
+  .player .who { font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; }
+  .player .who .where { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .player .track { position: relative; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .player .prog { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 3px; background: var(--accent); }
+  .player .time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .player .x { flex: none; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%;
+    display: inline-grid; place-items: center; background: transparent; color: var(--muted);
+    transition: opacity .2s; }
+  .player .x .ic { margin: 0; }
+  .player:not(.active) .x { opacity: 0; pointer-events: none; }
+  .player.playing .prog { background: var(--ok); }
+  .robotPlayers { flex: 1 1 100%; display: grid; gap: 12px; margin-top: 4px; }
+  .robotPlayers .player { padding: 10px 12px; border-radius: 16px; background: var(--soft); }
+  @media (prefers-reduced-motion: reduce) { .player .pp { transition: none; } }
+  .msgBtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .msgBtns button { flex: 1 1 150px; }
+  .msgBtns .sub { margin: 0; }
+
+  /* quick drawer */
+  details.card { padding: 0; }
+  summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; min-height: 56px;
+    padding: 8px 20px; font-weight: 600; border-radius: var(--r); }
+  summary::-webkit-details-marker { display: none; }
+  summary small { display: block; font-weight: 400; color: var(--muted); font-size: 14px; }
+  summary .txt { flex: 1; min-width: 0; }
+  summary .chev { color: var(--muted); transition: transform .4s var(--spring); }
+  details[open] summary .chev { transform: rotate(90deg); }
+  .drawer { padding: 0 20px 20px; animation: inFade .3s ease both; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+  .chips button { border-radius: 99px; font-size: 15px; }
+  .row { display: flex; gap: 8px; }
+  .row input { min-width: 0; }
+  .row button { flex: none; }
+  .foot { text-align: center; margin: 22px 0 8px; }
+
+  /* error toast: always on screen, wherever the page is scrolled */
+  #err { position: fixed; left: 50%; bottom: 18px; z-index: 30; width: max-content; max-width: calc(100vw - 32px);
+    display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-radius: 16px; font-size: 15px; font-weight: 500;
+    background: var(--ink); color: var(--bg); box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    transform: translate(-50%, 24px); opacity: 0; visibility: hidden;
+    transition: transform .45s var(--spring), opacity .25s, visibility 0s .45s; }
+  #err.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; transition-delay: 0s; }
+  #err .ic { color: #ffb340; }
+
+  /* full-screen picture cards for the child */
+  #cards { position: fixed; inset: 0; z-index: 20; background: var(--bg); padding: 24px 16px 32px; overflow: auto;
+    opacity: 0; visibility: hidden; transform: scale(.96);
+    transition: opacity .25s, transform .45s var(--spring), visibility 0s .45s; }
+  #cards.show { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  #cards h3 { text-align: center; font-size: 32px; letter-spacing: -.025em; margin: 10px 56px 22px; }
+  #cards .themes { max-width: 820px; margin: 0 auto; gap: 14px; }
+  #cards .theme { min-height: 170px; font-size: 22px; font-weight: 600; border-radius: 26px; background: var(--card);
+    box-shadow: var(--shadow); }
+  #cards .theme.on { box-shadow: inset 0 0 0 4px var(--accent), var(--shadow); }
+  #cards .theme .em { font-size: 72px; }
+  #cards .theme.picked .em { transform: scale(1.3) rotate(-6deg); }
+  #cards .theme .tick { width: 32px; height: 32px; font-size: 17px; top: 12px; right: 12px; }
+  #cards .close { position: absolute; top: 16px; right: 16px; width: 48px; height: 48px; padding: 0; border-radius: 50%;
+    background: var(--soft-2); font-size: 20px; }
+  @media (max-width: 520px) { #cards .theme { min-height: 140px; font-size: 18px; } #cards .theme .em { font-size: 58px; }
+    #cards h3 { font-size: 26px; } }
+
+  /* ---------- accessibility preferences ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    button, .tabs .thumb, .seg, .seg i, .hl, .theme .em, .theme .tick, summary .chev, .orb > *, .playBtn .st {
+      transition-duration: .01s !important; }
+    button:active:not(:disabled) { transform: none; }
+    #cards, #cards.show { transform: none; }
+    #err, #err.show { transform: translate(-50%, 0); }
+    .wave i { transform: scaleY(.6); } .wave i:nth-child(2n) { transform: scaleY(1); }
+    /* the breathing guide still guides, but by brightness instead of size */
+    .breath .halo, .breath .ball { transform: scale(.9) !important; }
+    .breath[data-phase="in"] .ball { opacity: 1; transition: opacity 3s ease !important; }
+    .breath[data-phase="out"] .ball { opacity: .35; transition: opacity 4s ease !important; }
+    .quietOrb .o, .quietOrb .o::after { transform: none; }
+    .saysLines { scroll-behavior: auto; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    header { background: var(--card); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  @media (prefers-contrast: more) {
+    :root { --line: currentColor; --muted: var(--ink); }
+    header { background: var(--card); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .card, button, .says { outline: 1px solid var(--ink); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><span data-ic="moon"></span><h1>Lullaby</h1></div>
+    <span id="conn" role="status"><span id="connIc"></span><span id="connText">Connecting…</span></span>
+    <span id="voice" role="status"></span>
+    <span class="spacer"></span>
+    <button id="stopBtn" onclick="stopAll()" aria-label="Stop the robot now"><span data-ic="stop" data-ic-class="fill"></span>Stop</button>
+  </div>
+  <div id="status" data-activity="idle" aria-live="polite">
+    <div class="orb" aria-hidden="true">
+      <span class="o-idle" data-ic="bot" style="width:22px;height:22px;display:grid"></span>
+      <span class="o-talk wave"><i></i><i></i><i></i><i></i></span>
+      <span class="o-quiet" data-ic="moon" style="width:22px;height:22px;display:grid"></span>
+    </div>
+    <div id="statusText">Connecting…</div>
+  </div>
+</header>
+
+<nav aria-label="Stages">
+  <div class="tabs" id="tabs">
+    <span class="thumb"></span>
+    <button data-stage="ready" onclick="go('ready')"><span data-ic="clipboard"></span><span>Setup</span></button>
+    <button data-stage="before" onclick="go('before')"><span data-ic="book"></span><span>Pre-op</span></button>
+    <button data-stage="after" onclick="go('after')"><span data-ic="moon"></span><span>Recovery</span></button>
+  </div>
+</nav>
+<main id="view"></main>
+
+<div id="err" role="alert"></div>
+
+<div id="cards" aria-hidden="true">
+  <button class="close" onclick="cards(false)" aria-label="Close"><span data-ic="x"></span></button>
+  <h3>Pick your story!</h3>
+  <div class="themes" id="bigThemes"></div>
+</div>
+
+<script>
+/* Icons: paths from Lucide (https://lucide.dev), ISC License. Inlined so the panel needs no network. */
+const ICONS = {
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  stop: '<rect x="5" y="5" width="14" height="14" rx="2.5"/>',
+  pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  again: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
+  volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  wifi: '<path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/>',
+  laptop: '<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  clipboard: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+  book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  wind: '<path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>',
+  message: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  bot: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  expand: '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  voice: '<path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>',
+  bolt: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+};
+const ic = (name, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const STEP_ICON = { greet: 'smile', ask_name: 'message', got_name: 'tag', ask_story: 'book', chapter1: 'book',
+  breathing: 'wind', mask: 'wind', promise: 'heart', chapter2: 'book' };
+const BREATH_STEPS = ['breathing', 'mask'];
+const STAGES = ['ready', 'before', 'after'];
+
+const $ = id => document.getElementById(id);
+const view = $('view');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+document.querySelectorAll('[data-ic]').forEach(e => { e.innerHTML = ic(e.dataset.ic, e.dataset.icClass || ''); });
+
+let S = null, stage = STAGES.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'ready', cursor = 0,
+  lastSig = '', recorder = null, recSlot = null, recStart = 0, recTimer = null, wasTalking = null;
+let shown = null;          // what the DOM currently shows: { stage, cursor, done }
+let pressing = false;      // a finger or mouse button is down: don't rebuild under it
+let dropInputs = false;    // after "End session": don't carry typed values over
+let errTimer = null;
+const spoken = { label: '', line: '', idx: -1 };   // which line of the current step is being said
+
+function setErr(msg) {
+  const el = $('err');
+  clearTimeout(errTimer);
+  if (!msg) { el.classList.remove('show'); return; }
+  el.innerHTML = ic('alert') + `<span>${esc(msg)}</span>`;
+  el.classList.add('show');
+  errTimer = setTimeout(() => el.classList.remove('show'), 8000);
+}
+
+async function post(path, body, form) {
+  setErr('');
+  const opt = { method: 'POST' };
+  if (form) opt.body = body;
+  else if (body) { opt.headers = { 'Content-Type': 'application/json' }; opt.body = JSON.stringify(body); }
+  try {
+    const r = await fetch(path, opt);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { setErr(j.detail || 'Something went wrong.'); return false; }
+    update(j); return true;
+  } catch (e) { setErr('App offline'); return false; }
+}
+
+const before = () => S.steps.filter(s => s.phase === 'Before surgery');
+const stepByKey = k => S.steps.find(s => s.key === k);
+async function go(s) {
+  stopAuto();
+  cancelListen();
+  if (stage === 'ready' && s !== 'ready') await saveReady();
+  stage = s; history.replaceState(null, '', '#' + s); draw(true); window.scrollTo(0, 0);
+}
+function cards(on) {
+  $('cards').classList.toggle('show', on); $('cards').setAttribute('aria-hidden', String(!on));
+}
+function pickTheme(k, btn) {
+  post('/api/session', { theme: k });
+  if (btn && btn.closest('#cards')) {       // let the child see their pick land before the cards close
+    btn.classList.add('on', 'picked'); setTimeout(() => cards(false), 550);
+  } else cards(false);
+}
+function field(id) { const el = $(id); return el ? el.value.trim() : ''; }
+
+/* ---------- views ---------- */
+function viewReady() {
+  const s = S.session;
+  const msgs = S.parent.map(p => {
+    const m = /^(.*?)\s*\((.*)\)$/.exec(p.label), example = m ? m[2] : '';
+    const rec = recSlot === p.slot;
+    return `
+    <div class="msg ${rec ? 'recording' : ''}">
+      <span class="name">Message ${esc(p.slot)}
+        ${rec ? `<small>Recording</small>`
+          : `<small><span class="state ${p.recorded ? 'ok' : ''}">${p.recorded ? ic('check') + 'Recorded' : 'Empty'}</span></small>`}
+      </span>
+      <span class="btns">
+      ${rec
+        ? `<span class="recNow" role="status"><span class="recDot"></span><span id="recTime">0:00</span></span>
+           <button class="rec" onclick="stopRec()">${ic('stop', 'fill')}Stop</button>`
+        : `<button onclick="startRec('${p.slot}')" ${recSlot ? 'disabled' : ''}>${ic('mic')}${p.recorded ? 'Redo' : 'Record'}</button>`}
+      </span>
+      ${p.recorded && !rec ? `
+      <div class="player" data-mode="local" data-slot="${esc(p.slot)}">
+        <button class="pp" onclick="toggleLocal('${p.slot}')" aria-label="Play message ${esc(p.slot)}">${ic('play', 'fill')}</button>
+        <div class="mid"><div class="track"><div class="prog"></div></div><span class="time">Preview</span></div>
+      </div>` : ''}
+    </div>`; }).join('');
+  return `
+    <div class="card">
+      <h2>Patient</h2>
+      <div class="two">
+        <div><label for="kid">First name</label><input id="kid" value="${esc(s.kid)}" placeholder="e.g. Maya" autocomplete="off"></div>
+        <div><label for="age">Age</label><input id="age" value="${esc(s.age)}" inputmode="numeric" placeholder="4–8" autocomplete="off"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Parent messages <span style="font-size:15px;color:var(--muted);font-weight:400;letter-spacing:0">Optional</span></h2>
+      <p class="sub">Played in recovery. Deleted after.</p>
+      ${msgs}
+    </div>
+    <div class="card"><button class="big" onclick="startBefore()">Continue ${ic('arrow')}</button></div>
+    ${foot()}`;
+}
+
+function saysBlock(st, emptyText) {
+  const lines = st.lines.length
+    ? st.lines.map((l, i) => `<p data-i="${i}">“${esc(l)}”</p>`).join('')
+    : `<p style="color:var(--muted)">${emptyText}</p>`;
+  return `<div class="says" data-label="${esc(st.label)}">
+      <div class="saysHead">${ic('bot')}Script</div>
+      <div class="saysLines"><div class="hl"></div>${lines}</div>
+    </div>`;
+}
+
+function playButton(st, blocked) {
+  const busy = S.activity === 'talking', done = S.session.done.includes(st.key);
+  const rest = done ? 'again' : 'play', playing = busy && S.label === st.label;
+  return `<button class="big playBtn" data-busy ${blocked ? 'data-blocked' : ''} data-label="${esc(st.label)}"
+      data-rest="${rest}" data-state="${playing ? 'playing' : rest}" onclick="play('${st.key}')" ${busy || blocked ? 'disabled' : ''}>
+      <span class="st st-play">${ic('play', 'fill')}Play</span>
+      <span class="st st-again">${ic('again')}Play again</span>
+      <span class="st st-playing"><span class="wave"><i></i><i></i><i></i><i></i></span>Talking…</span>
+    </button>`;
+}
+
+function segClass(i, cur, done, steps) { return i === cur ? 'cur' : done.includes(steps[i].key) ? 'done' : ''; }
+
+function viewBefore() {
+  const steps = before();
+  cursor = Math.min(cursor, steps.length - 1);
+  const st = steps[cursor];
+  const s = S.session, done = s.done.includes(st.key);
+  // Draw the bar the way it looked a moment ago; rebuild() then moves it to the new state so it animates.
+  const was = shown && shown.stage === 'before' ? shown : { cursor, done: s.done };
+  const bars = steps.map((x, i) =>
+    `<button class="seg ${segClass(i, was.cursor, was.done, steps)}" data-i="${i}" title="${esc(x.label)}"
+       aria-label="Step ${i + 1}: ${esc(x.label)}" onclick="jump(${i})"><span><i></i></span></button>`).join('');
+
+  let extra = '', blocked = '';
+  if (st.key === 'ask_name' || st.key === 'got_name') {
+    extra = (st.key === 'ask_name' ? listenBox('nickname') : '') + `<label for="robotName">Dr. Juni's nickname (what the child said)</label>
+      <div class="row" style="margin-bottom:16px"><input id="robotName" value="${esc(s.robot_name)}" placeholder="e.g. Sparkle"
+        autocomplete="off" onkeydown="if(event.key==='Enter')this.blur()"></div>`;
+  }
+  if (st.key === 'ask_story') {
+    extra = listenBox('story') + `<span class="label">Story</span>
+      <div class="themes">${themeButtons()}</div>
+      <button class="wide" onclick="cards(true)">${ic('expand')}Show child</button>`;
+  }
+  if (BREATH_STEPS.includes(st.key)) {
+    extra = `<div class="breath" data-phase="idle" data-label="${esc(st.label)}" aria-hidden="true">
+        <div class="stage"><div class="halo"></div><div class="ball"></div><div class="word">Breathe along with the circle</div></div>
+      </div>`;
+  }
+  if (st.needs_theme && !s.theme) {
+    const at = steps.findIndex(x => x.key === 'ask_story');
+    blocked = `<div class="blocked">${ic('alert')}<span>Needs a story</span><button onclick="jump(${at})">Pick ${ic('right')}</button></div>`;
+  }
+
+  return `
+    ${autoCard()}
+    <div class="card stepCard">
+      <div class="progress">${bars}</div>
+      <div class="stepBody">
+        <div class="stepHead">
+          <div class="tile">${ic(STEP_ICON[st.key] || 'bot')}</div>
+          <div>
+            <div class="count">Step ${cursor + 1} of ${steps.length}${done ? `<span class="badge">${ic('check')}Done</span>` : ''}</div>
+            <h2>${esc(st.label)}</h2>
+          </div>
+        </div>
+        <p class="tip"><b>You</b><span>${esc(st.hint)}</span></p>
+        ${extra}
+        ${saysBlock(st, 'Pick a story to see the script.')}
+        ${blocked}
+        ${playButton(st, !!blocked)}
+        <div class="navrow">
+          <button onclick="jump(${cursor - 1})" ${cursor === 0 ? 'disabled' : ''}>${ic('left')}Back</button>
+          ${cursor === steps.length - 1
+            ? `<button class="fwd" onclick="go('after')">Go to after surgery ${ic('right')}</button>`
+            : `<button class="${done ? 'fwd' : ''}" onclick="jump(${cursor + 1})">${done ? 'Next' : 'Skip'} ${ic('right')}</button>`}
+        </div>
+      </div>
+    </div>
+    ${extras()}`;
+}
+
+function viewAfter() {
+  const s = S.session, busy = S.activity === 'talking', quiet = S.activity === 'recovery';
+  const ch2 = stepByKey('chapter2');
+  const recorded = S.parent.filter(p => p.recorded);
+  const msgBtns = recorded.length
+    ? `<div class="robotPlayers">${recorded.map(p => `
+      <div class="player" data-mode="robot" data-slot="${esc(p.slot)}">
+        <button class="pp" data-busy onclick="toggleRobot('${p.slot}')" aria-label="Play parent message ${esc(p.slot)} on the robot" ${busy ? 'disabled' : ''}>${ic('play', 'fill')}</button>
+        <div class="mid">
+          <div class="who">Message ${esc(p.slot)}</div>
+          <div class="track"><div class="prog"></div></div>
+          <span class="time">Ready</span>
+        </div>
+        <button class="x" onclick="post('/api/parent/stop')" aria-label="Stop and go back to the start">${ic('x')}</button>
+      </div>`).join('')}</div>`
+    : `<p class="sub">No messages recorded.</p>`;
+  const blocked = s.theme ? '' : `<div class="blocked">${ic('alert')}<span>Needs a story</span><button onclick="toStory()">Pick ${ic('right')}</button></div>`;
+  return `
+    <div class="card">
+      <div class="stepHead">
+        <div class="tile night">${ic('moon')}</div>
+        <div>
+          <div class="count">On arrival</div>
+          <h2>Quiet mode${quiet ? `<span class="badge">On</span>` : ''}</h2>
+        </div>
+      </div>
+      <p class="tip"><b>You</b><span>${quiet
+        ? 'Play a message if the child is upset.'
+        : 'Silent. Slow breathing.'}</span></p>
+      ${quiet
+        ? `<div class="quietOrb"><div class="o">${ic('moon')}</div><small>4s in · 6s out</small></div>`
+        : `<button class="big night" data-busy onclick="post('/api/recovery')" ${busy ? 'disabled' : ''}>${ic('moon')}Start</button>`}
+      <div class="msgBtns">${msgBtns}</div>
+      ${quiet ? `<div class="navrow" style="justify-content:center"><button onclick="stopAll()">${ic('stop', 'fill')}End quiet mode</button></div>` : ''}
+    </div>
+    <div class="card">
+      <div class="stepHead">
+        <div class="tile">${ic('book')}</div>
+        <div>
+          <div class="count">Wake-up${s.done.includes('chapter2') ? `<span class="badge">${ic('check')}Done</span>` : ''}</div>
+          <h2>${esc(ch2.label)}</h2>
+        </div>
+      </div>
+      <p class="tip"><b>You</b><span>${esc(ch2.hint)}</span></p>
+      ${saysBlock(ch2, 'Pick a story to see the script.')}
+      ${blocked}
+      ${playButton(ch2, !!blocked)}
+    </div>
+    ${extras()}
+    ${foot()}`;
+}
+
+function themeButtons() {
+  return S.themes.map(t => `<button class="theme ${S.session.theme === t.key ? 'on' : ''}" onclick="pickTheme('${t.key}', this)"><span class="tick">${ic('check')}</span><span class="em">${t.emoji}</span>${esc(t.label)}</button>`).join('');
+}
+
+function extras() {
+  const busy = S.activity === 'talking';
+  return `<details class="card" ${window._extrasOpen ? 'open' : ''} ontoggle="window._extrasOpen=this.open">
+    <summary>${ic('bolt')}<span class="txt">Quick lines</span><span class="chev">${ic('right')}</span></summary>
+    <div class="drawer">
+      <div class="chips">${S.reactions.map(r => `<button data-busy onclick="post('/api/react/${r.key}')" ${busy ? 'disabled' : ''}>${esc(r.label)}</button>`).join('')}</div>
+      <label for="say">Custom line</label>
+      <div class="row"><input id="say" placeholder="Mom is right outside." autocomplete="off" onkeydown="if(event.key==='Enter')say()"><button data-busy onclick="say()" ${busy ? 'disabled' : ''}>${ic('volume')}Say</button></div>
+    </div>
+  </details>`;
+}
+
+function foot() {
+  return `<div class="foot"><button class="quiet-link" onclick="endSession()">${ic('trash')}End session</button></div>`;
+}
+
+/* ---------- listening for the child's answer (offline Whisper on this laptop) ---------- */
+const LISTEN = { nickname: { state: 'idle', text: '', result: '' }, story: { state: 'idle', text: '', result: '' } };
+let lis = null;   // the live recording: { purpose, rec, stream, ctx, chunks, cancelled, ... }
+function listenBox(purpose) {
+  const title = purpose === 'nickname' ? 'Nickname' : 'Story';
+  return `<div class="listen" data-purpose="${purpose}" data-state="${LISTEN[purpose].state}">
+    <button class="mic" onclick="toggleListen('${purpose}')" aria-label="${title}">${ic('mic')}</button>
+    <div class="lmid"><div class="ltitle">${title}</div><div class="lstate" aria-live="polite"></div></div>
+  </div>`;
+}
+function listenText(purpose) {
+  const L = LISTEN[purpose];
+  const theme = S && S.themes.find(t => t.key === L.result);
+  switch (L.state) {
+    case 'armed': return 'Listening · child can interrupt';
+    case 'listening': return 'Listening…';
+    case 'working': return 'Transcribing…';
+    case 'heard': return purpose === 'nickname'
+      ? (L.result ? `“${esc(L.text)}” → <b>${esc(L.result)}</b>` : `“${esc(L.text)}” · type it below`)
+      : (theme ? `“${esc(L.text)}” → <b>${theme.emoji} ${esc(theme.label)}</b>` : `“${esc(L.text)}” · tap a picture`);
+    case 'nothing': return 'No answer · tap to retry';
+    case 'error': return esc(L.text);
+    default: return 'Listens after the question';
+  }
+}
+function updateListen() {
+  view.querySelectorAll('.listen').forEach(el => {
+    const p = el.dataset.purpose, L = LISTEN[p];
+    if (el.dataset.state !== L.state) el.dataset.state = L.state;
+    const html = listenText(p), st = el.querySelector('.lstate');
+    if (st.dataset.html !== html) { st.dataset.html = html; st.innerHTML = html; }
+  });
+}
+function setListen(purpose, state, text = '', result = '') {
+  Object.assign(LISTEN[purpose], { state, text, result }); updateListen();
+}
+function toggleListen(purpose) {
+  if (lis && lis.purpose === purpose && lis.armed && !lis.robotDone && !lis.barged) return bargeIn(lis);
+  if (lis && lis.purpose === purpose) return finishListen();
+  startListen(purpose);
+}
+const ASK_STEPS = { ask_name: 'nickname', ask_story: 'story' };
+async function startListen(purpose, armed = false) {
+  if (lis) cancelListen();
+  if (recSlot) return;                                 // a parent message is being recorded
+  if (!armed && S.activity === 'talking') { setErr('Robot is talking'); return; }
+  if (!pa.paused) pa.pause();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  } catch (e) {
+    setListen(purpose, 'error', 'Mic unavailable'); return;
+  }
+  const ctx = new AudioContext(), src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
+  an.fftSize = 1024; src.connect(an);
+  const buf = new Float32Array(an.fftSize);
+  const t0 = performance.now();
+  const me = { purpose, stream, ctx, chunks: [], cancelled: false, began: t0, heardAt: 0, lastLoud: 0,
+    t0, armed, robotDone: !armed, barged: false, offset: 0, echo: 0, loudSince: 0, speakAt: 0 };
+  me.rec = new MediaRecorder(stream);
+  me.rec.ondataavailable = e => me.chunks.push(e.data);
+  me.rec.onstop = () => afterListen(me);
+  me.result = new Promise(r => { me.resolve = r; });
+  lis = me; me.rec.start(); setListen(purpose, armed ? 'armed' : 'listening');
+  (function level() {
+    if (lis !== me) return;
+    an.getFloatTimeDomainData(buf);
+    let sum = 0; for (const v of buf) sum += v * v;
+    const rms = Math.sqrt(sum / buf.length), now = performance.now();
+    const mic = view.querySelector(`.listen[data-purpose="${purpose}"] .mic`);
+    if (mic) mic.style.setProperty('--lvl', (1 + Math.min(rms * 6, 0.45)).toFixed(3));
+    if (me.armed && !me.robotDone && !me.barged) {
+      // Barge-in: a voice clearly louder than the robot's own voice in the mic, for 200 ms.
+      // Learn how loud the robot sounds here during its first 1.2 s of actual speech (not the
+      // silence before it starts); after that, only frames below the trigger level update it.
+      const speaking = S && S.activity === 'talking' && !!S.line;
+      if (speaking && !me.speakAt) me.speakAt = now;
+      const learning = me.speakAt && now - me.speakAt < 1200;
+      const thr = Math.max(0.05, me.echo * 2);
+      if (learning || (me.speakAt && rms < thr)) me.echo = Math.max(me.echo * 0.998, rms);
+      if (me.speakAt && !learning && rms > thr) { if (!me.loudSince) me.loudSince = now; }
+      else me.loudSince = 0;
+      if (me.loudSince && now - me.loudSince > 200) bargeIn(me);
+      if (now - me.t0 > 60000) return finishListen();   // safety net
+      requestAnimationFrame(level); return;
+    }
+    if (rms > 0.02) { if (!me.heardAt) me.heardAt = now; me.lastLoud = now; }
+    const t = now - me.began;
+    // Stop by itself: 1 s of quiet after the child spoke, nothing at all for 7 s, or 10 s max.
+    if ((me.heardAt && now - me.lastLoud > 1000 && now - me.heardAt > 300) || (!me.heardAt && t > 7000) || t > 10000) return finishListen();
+    requestAnimationFrame(level);
+  })();
+  return me.result;
+}
+function bargeIn(me) {
+  if (me.barged || me.robotDone) return;
+  const now = performance.now();
+  me.barged = true;
+  me.offset = Math.max(0, (now - me.t0) / 1000 - 0.35);  // keep the start of the child's first word
+  me.began = now; me.heardAt = now; me.lastLoud = now;    // the child is already talking
+  setListen(me.purpose, 'listening');
+  post('/api/bargein');
+}
+function robotFinished(me) {                              // asked the whole question, no interruption
+  if (me.barged || me.robotDone) return;
+  const now = performance.now();
+  me.robotDone = true;
+  me.offset = Math.max(0, (now - me.t0) / 1000 - 0.15);
+  me.began = now; me.heardAt = 0; me.lastLoud = 0;
+  setListen(me.purpose, 'listening');
+}
+function finishListen() { if (lis && lis.rec.state !== 'inactive') lis.rec.stop(); }
+function cancelListen() {
+  if (!lis) return;
+  const p = lis.purpose; lis.cancelled = true; finishListen();
+  if (['listening', 'armed'].includes(LISTEN[p].state)) setListen(p, 'idle');
+}
+async function afterListen(me) {
+  const answer = await understand(me);
+  me.resolve(answer);                // the nickname or theme, or null
+}
+async function understand(me) {
+  me.stream.getTracks().forEach(t => t.stop()); me.ctx.close();
+  if (lis === me) lis = null;
+  if (me.cancelled) return null;
+  if (!me.heardAt) { setListen(me.purpose, 'nothing'); return null; }
+  setListen(me.purpose, 'working');
+  const type = me.rec.mimeType || 'audio/webm';
+  const ext = type.includes('mp4') ? '.m4a' : type.includes('ogg') ? '.ogg' : '.webm';
+  const fd = new FormData(); fd.append('file', new Blob(me.chunks, { type }), 'answer' + ext);
+  try {
+    const q = `purpose=${me.purpose}&start=${me.offset.toFixed(2)}&barged=${me.barged ? 1 : 0}`;
+    const r = await fetch('/api/listen?' + q, { method: 'POST', body: fd });
+    const j = await r.json();
+    if (!r.ok) { setListen(me.purpose, 'error', j.detail || "Couldn't transcribe"); return null; }
+    if (!j.text) { setListen(me.purpose, 'nothing'); return null; }
+    if (me.purpose === 'nickname') {
+      setListen('nickname', 'heard', j.text, j.nickname);
+      if (!j.nickname) return null;
+      if ($('robotName')) $('robotName').value = j.nickname;
+      await post('/api/session', { robot_name: j.nickname });   // saved before the robot says it
+      return j.nickname;
+    }
+    setListen('story', 'heard', j.text, j.theme || '');
+    if (!j.theme) return null;
+    await post('/api/session', { theme: j.theme });
+    return j.theme;
+  } catch (e) { setListen(me.purpose, 'error', 'App offline'); return null; }
+}
+
+/* ---------- parent message players ---------- */
+const pa = new Audio();               // listening back on this laptop (Get ready)
+pa.preload = 'auto';
+let paSlot = null, ppAt = 0;          // ppAt: when the server's playback position was received
+const mmss = t => { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+function toggleLocal(slot) {
+  if (paSlot === slot && !pa.paused) { pa.pause(); return updatePlayers(); }
+  if (paSlot !== slot) { paSlot = slot; pa.src = `/api/parent/${slot}/audio?t=${Date.now()}`; }
+  pa.play().catch(() => setErr("Couldn't play recording"));
+  updatePlayers();
+}
+['play', 'pause', 'ended', 'loadedmetadata'].forEach(ev => pa.addEventListener(ev, () => {
+  if (ev === 'ended') pa.currentTime = 0;
+  updatePlayers(); if (ev === 'play') tick();
+}));
+function toggleRobot(slot) {
+  const pb = S.parent_playback;
+  if (pb && pb.slot === slot && pb.state === 'playing') return post('/api/parent/pause');
+  if (!pa.paused) pa.pause();
+  post(`/api/parent/${slot}/play`);
+}
+function setPlayer(el, playing, pos, dur, idleText) {
+  const btn = el.querySelector('.pp');
+  const want = playing ? 'pause' : 'play';
+  if (btn.dataset.ic !== want) {
+    btn.dataset.ic = want; btn.innerHTML = ic(want, 'fill');
+    btn.setAttribute('aria-label', (playing ? 'Pause' : 'Play') + ' message ' + el.dataset.slot);
+  }
+  const active = playing || pos > 0;
+  el.classList.toggle('playing', playing); el.classList.toggle('active', active);
+  el.querySelector(".prog").style.width = (dur ? Math.min(100, pos / dur * 100) : 0) + '%';
+  const t = active && dur ? `${mmss(pos)} / ${mmss(dur)}${playing ? '' : ' · paused'}` : idleText;
+  const time = el.querySelector('.time'); if (time.textContent !== t) time.textContent = t;
+}
+function updatePlayers() {
+  if (!S) return;
+  const pb = S.parent_playback;
+  view.querySelectorAll('.player').forEach(el => {
+    const slot = el.dataset.slot;
+    if (el.dataset.mode === 'local') {
+      const mine = paSlot === slot;
+      setPlayer(el, mine && !pa.paused, mine ? pa.currentTime : 0, mine ? pa.duration || 0 : 0, 'Preview');
+    } else {
+      const mine = pb && pb.slot === slot;
+      const pos = !mine ? 0 : pb.state === 'playing' ? pb.position + (performance.now() - ppAt) / 1000 : pb.position;
+      setPlayer(el, !!mine && pb.state === 'playing', mine ? Math.min(pos, pb.duration) : 0, mine ? pb.duration : 0, 'Ready');
+    }
+  });
+}
+function tick() {                      // smooth progress between polls, only while something plays
+  updatePlayers();
+  const pb = S && S.parent_playback;
+  if (!pa.paused || (pb && pb.state === 'playing')) requestAnimationFrame(tick);
+}
+
+/* ---------- automatic onboarding: hello -> nickname -> story -> breathing, no tapping ---------- */
+let auto = null;
+const autoOk = me => auto === me && !me.cancelled;
+function stopAuto() { if (auto) { auto.cancelled = true; auto = null; draw(true); } }
+function showStep(key) {
+  const i = before().findIndex(x => x.key === key);
+  if (i >= 0 && (cursor !== i || stage !== 'before')) {
+    cursor = i; stage = 'before'; history.replaceState(null, '', '#before'); draw(true);
+  }
+}
+function waitUntil(me, test) {
+  return new Promise(res => {
+    const t = setInterval(() => {
+      if (!autoOk(me)) { clearInterval(t); res(null); }
+      else { const v = test(); if (v) { clearInterval(t); res(v); } }
+    }, 120);
+  });
+}
+async function autoSay(me, path) {                 // robot says something; resolves when it's done
+  if (!autoOk(me) || !await post(path)) return false;
+  return !!await waitUntil(me, () => S.activity !== 'talking');
+}
+async function autoStep(me, key) { showStep(key); return autoSay(me, '/api/step/' + key); }
+async function autoAsk(me, path, purpose, key) {   // robot asks while the mic already listens
+  showStep(key);
+  const heard = startListen(purpose, true);
+  if (!autoOk(me) || !await post(path)) { cancelListen(); return null; }
+  const answer = await heard;
+  return autoOk(me) ? answer : null;
+}
+async function runOnboarding() {
+  if (S.activity === 'talking') return setErr('Robot is talking');
+  if (!S.session.kid) { setErr('Add a first name'); return go('ready'); }
+  cancelListen();
+  const me = auto = { cancelled: false };
+  setListen('nickname', 'idle'); setListen('story', 'idle');
+  await post('/api/session', { robot_name: '', theme: '' });   // a fresh nickname and story
+  draw(true);
+  try {
+    if (!await autoStep(me, 'greet')) return;
+    let nick = await autoAsk(me, '/api/step/ask_name', 'nickname', 'ask_name');
+    if (!autoOk(me)) return;
+    if (!nick) nick = await autoAsk(me, '/api/flow/again_name', 'nickname', 'ask_name');
+    if (!autoOk(me)) return;
+    if (nick) { if (!await autoStep(me, 'got_name')) return; }
+    else if (!await autoSay(me, '/api/flow/no_name')) return;
+
+    let theme = await autoAsk(me, '/api/step/ask_story', 'story', 'ask_story');
+    if (!autoOk(me)) return;
+    if (!theme) theme = await autoAsk(me, '/api/flow/again_story', 'story', 'ask_story');
+    if (!autoOk(me)) return;
+    if (!theme) {                                    // still unsure: let the child tap a picture
+      if (!await autoSay(me, '/api/flow/tap_story')) return;
+      cards(true);
+      theme = await waitUntil(me, () => S.session.theme);
+      if (!theme) return;
+    }
+    for (const key of ['chapter1', 'breathing']) if (!await autoStep(me, key)) return;
+    showStep('mask');                                // next: the parts that need the nurse's timing
+  } finally {
+    if (auto === me) { auto = null; draw(true); }
+  }
+}
+function autoCard() {
+  if (auto) return `<div class="card autoCard running">
+      <div class="autoRow"><span class="autoDot"></span><div><b>Intro running</b>
+      <small>Listening automatically</small></div></div>
+      <button class="wide" onclick="stopAll()">${ic('stop', 'fill')}Stop</button></div>`;
+  return `<div class="card autoCard">
+      <button class="big" onclick="runOnboarding()" data-busy ${S.activity === 'talking' ? 'disabled' : ''}>${ic('play', 'fill')}Start intro</button>
+      <small>Hello · Nickname · Story · Breathing</small></div>`;
+}
+
+/* ---------- actions ---------- */
+async function stopAll() {
+  stopAuto();
+  cancelListen();
+  const b = $('stopBtn'); b.classList.add('busy');
+  await post('/api/stop'); b.classList.remove('busy');
+}
+async function saveReady() {
+  if (!$('kid')) return true;
+  return post('/api/session', { kid: field('kid'), age: field('age') });
+}
+async function startBefore() {
+  if (!field('kid')) { setErr('Add a first name'); $('kid').focus(); return; }
+  go('before');
+}
+async function play(key) {
+  cancelListen();
+  if (ASK_STEPS[key]) startListen(ASK_STEPS[key], true);   // listen while asking, so the child can cut in
+  if ($('robotName') && field('robotName') !== S.session.robot_name)
+    if (!await post('/api/session', { robot_name: field('robotName') })) return;
+  if (key === 'got_name' && !S.session.robot_name) {
+    setErr('Add a nickname or skip'); if ($('robotName')) $('robotName').focus(); return;
+  }
+  if (!await post('/api/step/' + key) && ASK_STEPS[key]) cancelListen();
+}
+function jump(i) {
+  stopAuto();
+  cancelListen();
+  if ($('robotName') && field('robotName') !== S.session.robot_name) post('/api/session', { robot_name: field('robotName') });
+  cursor = Math.max(0, Math.min(i, before().length - 1)); draw(true);
+}
+function toStory() { cursor = Math.max(0, before().findIndex(x => x.key === 'ask_story')); go('before'); }
+function say() { const t = field('say'); if (t) post('/api/say', { text: t }).then(ok => { if (ok && $('say')) $('say').value = ''; }); }
+function endSession() {
+  if (!window.confirm('End session? Parent messages will be deleted.')) return;
+  pa.pause(); paSlot = null; pa.removeAttribute('src');
+  cancelListen(); setListen('nickname', 'idle'); setListen('story', 'idle');
+  cursor = 0; dropInputs = true; post('/api/end').then(() => go('ready'));
+}
+function recTick() {
+  const el = $('recTime'); if (!el) return;
+  const t = Math.floor((Date.now() - recStart) / 1000);
+  el.textContent = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+async function startRec(slot) {
+  if (!pa.paused) pa.pause();
+  if ($('kid')) await saveReady();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { setErr('Mic unavailable. Open http://127.0.0.1:8890 on this laptop.'); return; }
+  const chunks = [];
+  recorder = new MediaRecorder(stream); recSlot = slot;
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    clearInterval(recTimer);
+    const type = recorder.mimeType || 'audio/webm';
+    const ext = type.includes('mp4') ? '.m4a' : type.includes('ogg') ? '.ogg' : '.webm';
+    const fd = new FormData(); fd.append('file', new Blob(chunks, { type }), 'rec' + ext);
+    recorder = null; recSlot = null;
+    if (paSlot === slot) { pa.pause(); paSlot = null; pa.removeAttribute('src'); }
+    await post('/api/parent/' + slot, fd, true);
+    draw(true);
+  };
+  recorder.start(); recStart = Date.now(); recTimer = setInterval(recTick, 250); draw(true);
+}
+function stopRec() { if (recorder) recorder.stop(); }
+
+/* ---------- state in ---------- */
+function update(state) {
+  const talking = state.activity === 'talking';
+  // Finished a step on its own -> move to the next step.
+  if (S && wasTalking && !talking && lis && lis.armed) robotFinished(lis);   // question asked: now listen
+  if (S && wasTalking && !talking && stage === 'before' && !auto) {
+    const steps = state.steps.filter(s => s.phase === 'Before surgery');
+    const cur = steps[cursor];
+    const justDone = cur && state.session.done.includes(cur.key) && !S.session.done.includes(cur.key);
+    if (justDone && !ASK_STEPS[cur.key] && cursor < steps.length - 1) cursor++;   // asking steps stay put
+  }
+  wasTalking = talking;
+  const wasPlaying = S && S.parent_playback && S.parent_playback.state === 'playing';
+  S = state; ppAt = performance.now();
+  if (S.parent_playback && S.parent_playback.state === 'playing' && !wasPlaying) requestAnimationFrame(tick);
+
+  // Follow the spoken line by position, so a line that appears twice ("Smell the flower.") lights up the right one.
+  if (!talking) { spoken.label = ''; spoken.line = ''; spoken.idx = -1; }
+  else {
+    if (S.label !== spoken.label) { spoken.label = S.label; spoken.line = ''; spoken.idx = -1; }
+    if (S.line !== spoken.line) {
+      spoken.line = S.line;
+      const st = S.steps.find(x => x.label === S.label);
+      if (st && S.line) {
+        let i = st.lines.indexOf(S.line, spoken.idx + 1);
+        if (i < 0) i = st.lines.indexOf(S.line);
+        if (i >= 0) spoken.idx = i;
+      }
+    }
+  }
+
+  const conn = $('conn'), robot = S.mode === 'robot';
+  if (conn.className !== S.mode) {
+    conn.className = S.mode;
+    $('connIc').innerHTML = ic(robot ? 'wifi' : 'laptop');
+    $('connText').innerHTML = robot ? 'Robot' : 'Preview<span class="long"> · laptop audio</span>';
+    conn.title = robot ? 'Robot connected' : 'No robot connected. Audio plays on this laptop.';
+  }
+  // Voice engine, shown quietly next to the connection; a problem turns it into a calm warning.
+  const v = S.voice || {}, vSig = (v.engine || '') + '|' + (v.problem || '');
+  if ($('voice').dataset.sig !== vSig) {
+    $('voice').dataset.sig = vSig;
+    $('voice').className = v.problem ? 'problem' : '';
+    $('voice').innerHTML = v.engine ? ic('voice') + `<span class="long">${esc(v.engine)}</span>` : '';
+    $('voice').title = v.engine ? 'Voice: ' + v.engine + (v.problem ? '. ' + v.problem : '') : '';
+  }
+  const trouble = [S.robot_error, v.problem].filter(Boolean).join(' · ');
+  const st = $('status');
+  st.dataset.activity = S.activity;
+  st.classList.toggle('error', S.activity === 'idle' && !!trouble);
+  const text = talking ? (S.line ? '“' + S.line + '”' : S.label)
+    : S.activity === 'recovery' ? 'Quiet mode'
+    : (trouble || 'Ready');
+  if ($('statusText').textContent !== text) $('statusText').textContent = text;
+  draw(false);
+}
+
+function offline() {
+  const conn = $('conn');
+  if (conn.className === 'offline') return;
+  conn.className = 'offline';
+  $('connIc').innerHTML = ic('alert');
+  $('connText').textContent = 'Offline';
+  $('statusText').textContent = 'App offline';
+}
+
+/* ---------- rendering ----------
+   rebuild(): replaces the view's HTML. Only when the *structure* changes (screen, step, session, recordings),
+              never on a plain poll, never while someone is typing or pressing in the view.
+   patch():   runs on every state update and only touches classes/attributes in place (talking state,
+              current line, breathing phase), so nothing a finger is on ever gets replaced. */
+function draw(force) {
+  if (!S) return;
+  const tabs = $('tabs');
+  tabs.style.setProperty('--i', STAGES.indexOf(stage));
+  tabs.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.stage === stage;
+    b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  const sig = JSON.stringify([stage, cursor, S.session, S.parent, recSlot, S.activity === 'recovery', !!auto]);
+  if (force || sig !== lastSig) {
+    // Don't wipe what someone is typing, and don't pull a button out from under a press.
+    const active = document.activeElement;
+    const typing = active && active.tagName === 'INPUT' && view.contains(active);
+    if (force || (!typing && !pressing)) rebuild(sig);
+  }
+  patch();
+}
+
+function rebuild(sig) {
+  lastSig = sig;
+  const keep = {};
+  if (!dropInputs) ['kid', 'age', 'robotName', 'say'].forEach(id => { if ($(id) && $(id).value) keep[id] = $(id).value; });
+  dropInputs = false;
+  const dir = !shown ? 'fade'
+    : shown.stage !== stage ? (STAGES.indexOf(stage) > STAGES.indexOf(shown.stage) ? 'fwd' : 'back')
+    : stage === 'before' && shown.cursor !== cursor ? (cursor > shown.cursor ? 'fwd' : 'back') : '';
+  const sameStage = shown && shown.stage === stage;
+
+  view.innerHTML = stage === 'ready' ? viewReady() : stage === 'before' ? viewBefore() : viewAfter();
+  Object.entries(keep).forEach(([id, v]) => { if ($(id)) $(id).value = v; });
+  $('bigThemes').innerHTML = themeButtons();
+  recTick();
+
+  if (stage === 'before') {            // progress bar: start from the old state, then move to the new one
+    const steps = before(), segs = view.querySelectorAll('.seg');
+    void view.offsetWidth;
+    segs.forEach((el, i) => { el.className = 'seg ' + segClass(i, cursor, S.session.done, steps); });
+    const cur = segs[cursor]; if (cur) cur.setAttribute('aria-current', 'step');
+  }
+  if (dir) {                           // a step change slides only the step body; the bar above stays put
+    const target = (sameStage && view.querySelector('.stepBody')) || view;
+    view.classList.remove('in-fwd', 'in-back', 'in-fade');
+    void target.offsetWidth;
+    target.classList.add('in-' + dir);
+  }
+  shown = { stage, cursor, done: [...S.session.done] };
+}
+
+function breathPhase(line, idx, total) {
+  if (/smell the flower|breathe? in/i.test(line)) return 'in';
+  if (/\bblow\b|^and out/i.test(line)) return 'out';
+  return idx >= total - 1 && idx > 0 ? 'done' : 'ready';
+}
+const BREATH_WORDS = { idle: 'Breathe along', ready: 'Ready', in: 'Breathe in', out: 'Breathe out', done: 'Done' };
+
+function patch() {
+  updatePlayers();
+  updateListen();
+  const busy = S.activity === 'talking';
+  view.querySelectorAll('[data-busy]').forEach(b => { b.disabled = busy || b.hasAttribute('data-blocked'); });
+  view.querySelectorAll('.playBtn').forEach(b => {
+    b.dataset.state = busy && S.label === b.dataset.label ? 'playing' : b.dataset.rest;
+  });
+  view.querySelectorAll('.says').forEach(box => {
+    const playing = busy && S.label === box.dataset.label, idx = playing ? spoken.idx : -1;
+    box.classList.toggle('playing', playing);
+    const lines = box.querySelector('.saysLines'), hl = box.querySelector('.hl');
+    let now = null;
+    lines.querySelectorAll('p[data-i]').forEach(p => {
+      const i = +p.dataset.i;
+      p.classList.toggle('now', i === idx); p.classList.toggle('past', idx >= 0 && i < idx);
+      if (i === idx) now = p;
+    });
+    hl.classList.toggle('onLine', !!now);
+    if (now) {
+      hl.style.transform = `translateY(${now.offsetTop}px)`; hl.style.height = now.offsetHeight + 'px';
+      if (box.dataset.idx !== String(idx))   // keep the spoken line in sight inside the preview box
+        lines.scrollTop = now.offsetTop - (lines.clientHeight - now.offsetHeight) / 2;
+    }
+    box.dataset.idx = String(idx);
+  });
+  view.querySelectorAll('.breath').forEach(el => {
+    const playing = busy && S.label === el.dataset.label;
+    const st = S.steps.find(x => x.label === el.dataset.label);
+    const phase = playing ? breathPhase(S.line || '', spoken.idx, st ? st.lines.length : 0) : 'idle';
+    if (el.dataset.phase !== phase) { el.dataset.phase = phase; el.querySelector('.word').textContent = BREATH_WORDS[phase]; }
+  });
+}
+
+/* ---------- wiring ---------- */
+addEventListener('pointerdown', () => { pressing = true; }, true);
+['pointerup', 'pointercancel'].forEach(t => addEventListener(t, () => {
+  pressing = false; setTimeout(() => draw(false), 0);     // catch up on anything held back during the press
+}, true));
+view.addEventListener('focusout', () => setTimeout(() => draw(false), 0));
+addEventListener('resize', () => { if (S) patch(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') cards(false); });
+addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  if (STAGES.includes(h) && h !== stage) { stage = h; draw(true); }
+});
+
+async function poll() {
+  try { const r = await fetch('/api/state'); if (r.ok) update(await r.json()); else offline(); } catch (e) { offline(); }
+  const fast = S && (S.activity === 'talking' || (S.parent_playback && S.parent_playback.state === 'playing'));
+  setTimeout(poll, fast ? 350 : 700);
+}
+poll();
+</script>
+</body>
+</html>

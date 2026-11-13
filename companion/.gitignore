@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+audio_cache/
+parent_messages/
+*.wav
+*.webm
+*.m4a
+.env
+# Local secrets written by `elevenlabs onboard`
+/.env
