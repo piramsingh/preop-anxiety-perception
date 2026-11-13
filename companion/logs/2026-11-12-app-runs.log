@@ -222,7 +222,7 @@
 
 [exited with code 143]
 
-===== app run 2026-11-12 19:54 =====
+===== app run 2026-11-12 20:05 =====
 2026-11-12 19:51:20,714 reachy_mini.reachy_mini: Auto connection: localhost attempt failed (Failed to connect to ws://localhost:8000/ws/sdk: [Errno 61] Connection refused). Trying remote host 192.168.8.122.
 2026-11-12 19:51:20,743 reachy_mini.reachy_mini: Connection mode selected: network
 /Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:171: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
@@ -254,4 +254,13 @@
 2026-11-12 19:54:46,160 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
 2026-11-12 19:54:47,879 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
 2026-11-12 19:54:49,255 httpx: HTTP Request: POST https://api.elevenlabs.io/v1/text-to-speech/3Ho05jaHjjiQCVF9aGjs?output_format=pcm_22050 "HTTP/1.1 200 OK"
+/Users/piramsingh/DEV/Project Lullaby /companion/.venv/lib/python3.12/site-packages/reachy_mini/reachy_mini.py:238: RuntimeWarning: Reachy Mini SDK and daemon versions do not match: SDK=1.12.0, daemon=1.11.0. Running different versions can create issues. Install matching reachy_mini versions for the SDK and daemon.
+  self.media_manager = self._configure_mediamanager(self._media_backend, self._log_level)
+2026-11-12 20:05:38,149 reachy_mini.reachy_mini: No media backend requested by user.
+2026-11-12 20:05:38,149 reachy_mini.media.media_manager: No media backend selected.
+2026-11-12 20:05:38,149 reachy_mini.reachy_mini: Media re-acquired by daemon.
+/Users/piramsingh/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+
+[exited with code 143]
 
