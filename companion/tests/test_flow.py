@@ -370,7 +370,6 @@ def test_intro_runs_by_itself_and_listens_for_answers(client, monkeypatch):
         return {"purpose": purpose, "text": result, "result": result}
 
     monkeypatch.setattr(director_mod.Director, "listen_on_robot", fake_listen)
-    assert client.post("/api/intro").status_code == 400  # needs the child's name first
     client.post("/api/session", json={"kid": "Sam"})
     assert client.post("/api/intro").status_code == 200
     deadline = time.time() + 10
@@ -400,3 +399,26 @@ def test_stop_ends_the_intro(client, monkeypatch):
         time.sleep(0.05)
     s = client.get("/api/state").json()
     assert s["auto"] is None and "chapter1" not in s["session"]["done"]
+
+
+def test_intro_continues_where_the_visit_is(client, monkeypatch):
+    """Steps already done and answers already given are skipped; no name is needed."""
+    heard = []
+
+    def fake_listen(self, purpose):
+        heard.append(purpose)
+        self.session.theme = "heroes"
+        return {"purpose": purpose, "text": "heroes", "result": "heroes"}
+
+    monkeypatch.setattr(director_mod.Director, "listen_on_robot", fake_listen)
+    client.post("/api/step/greet")
+    wait_idle(client)
+    client.post("/api/session", json={"robot_name": "Sparky"})
+    assert client.post("/api/intro").status_code == 200  # no child's name, still runs
+    deadline = time.time() + 10
+    while client.get("/api/state").json()["auto"] and time.time() < deadline:
+        time.sleep(0.05)
+    s = client.get("/api/state").json()
+    assert heard == ["story"]  # nickname was already given
+    assert s["session"]["robot_name"] == "Sparky"
+    assert s["session"]["done"] == ["greet", "got_name", "ask_story", "chapter1", "breathing"]

@@ -26,7 +26,7 @@ import requests
 log = logging.getLogger("lullaby.robot")
 
 # Robot speaker volume in percent, set each time the robot connects.
-VOLUME = int(os.environ.get("LULLABY_ROBOT_VOLUME", "85"))
+VOLUME = int(os.environ.get("LULLABY_ROBOT_VOLUME", "100"))
 
 
 @dataclass(frozen=True)

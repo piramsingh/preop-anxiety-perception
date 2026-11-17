@@ -250,12 +250,14 @@ class Director:
         before the steps that need the nurse's timing (mask practice, the goodbye)."""
         if self.activity == "talking" or self.auto:
             raise Busy("Robot is busy")
-        if not self.session.kid:
-            raise ValueError("Add the child's first name first")
+        # The child's name is optional (Dr. Juni says "friend"). A fresh visit asks for a new
+        # nickname and story; otherwise the intro picks up where the visit is.
+        fresh = not self.session.done
+        if fresh:
+            self.session.robot_name, self.session.theme = "", ""
         self._auto_stop = threading.Event()
         self.auto = "intro"
-        self.session.robot_name, self.session.theme = "", ""  # a fresh nickname and story
-        self._note("Intro started")
+        self._note("Intro started" if fresh else "Intro continued")
         threading.Thread(target=self._intro, args=(self._auto_stop,), daemon=True).start()
 
     def _wait_performance(self, stop: threading.Event) -> bool:
@@ -289,20 +291,22 @@ class Director:
                 return None
             return None if stop.is_set() else (heard or {}).get("result")
 
+        done = self.session.done
         try:
-            if not step("greet"):
+            if "greet" not in done and not step("greet"):
                 return
-            nick = ask(lambda: step("ask_name"), "nickname")
-            if stop.is_set():
-                return
-            if not nick:
-                nick = ask(lambda: flow("again_name"), "nickname")
-            if stop.is_set():
-                return
-            if not (step("got_name") if nick else flow("no_name")):
-                return
+            if "got_name" not in done:
+                nick = self.session.robot_name or ask(lambda: step("ask_name"), "nickname")
+                if stop.is_set():
+                    return
+                if not nick:
+                    nick = ask(lambda: flow("again_name"), "nickname")
+                if stop.is_set():
+                    return
+                if not (step("got_name") if nick else flow("no_name")):
+                    return
 
-            theme = ask(lambda: step("ask_story"), "story")
+            theme = self.session.theme or ask(lambda: step("ask_story"), "story")
             if stop.is_set():
                 return
             if not theme:
@@ -321,7 +325,7 @@ class Director:
                     self._note("Intro paused: no story picked")
                     return
             for key in ("chapter1", "breathing"):
-                if not step(key):
+                if key not in done and not step(key):
                     return
             self._note("Intro done: next is mask practice or the goodbye")
         except Exception as e:  # noqa: BLE001

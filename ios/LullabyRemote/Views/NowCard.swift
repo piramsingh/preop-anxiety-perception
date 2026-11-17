@@ -93,7 +93,9 @@ struct NowCard: View {
         if state.parentPlayback != nil { return "Playing on the robot." }
         if state.isQuiet { return "Dr. Juni is resting. Stop ends quiet mode." }
         if journey.braveEarned { return "Every part of the story is told." }
-        if state.session.kid.isEmpty && journey.earnedCount == 0 { return "Add the child's first name to begin." }
+        if state.session.kid.isEmpty && journey.earnedCount == 0 {
+            return "Start intro runs by itself. Add the child's name first if you have it."
+        }
         if journey.wantsStoryPick { return "The child can say it or tap a picture." }
         if let next = journey.nextStep { return state.blockedReason(next) ?? next.hint }
         return ""

@@ -192,8 +192,8 @@ struct RootView: View {
         }
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
-                Button("Start intro from the top", systemImage: "play.fill") { remote.startIntro() }
-                    .disabled(remote.state.map { $0.isBusy || $0.session.kid.isEmpty } ?? true)
+                Button("Start or continue intro", systemImage: "play.fill") { remote.startIntro() }
+                    .disabled(remote.state.map { $0.isBusy } ?? true)
                 Button("Sticker book", systemImage: "seal.fill") { sheet = .stickers }
                     .disabled(remote.state == nil)
                 Divider()
@@ -224,11 +224,13 @@ struct RootView: View {
         if journey.braveEarned {
             return PrimaryAction(title: "End visit…", symbol: "checkmark.circle", prominent: false) { confirmEnd = true }
         }
-        if state.session.kid.isEmpty && journey.earnedCount == 0 {
-            return wide ? nil : PrimaryAction(title: "Add child's name", symbol: "person.crop.circle.badge.plus") { sheet = .visit }
-        }
-        if journey.earnedCount == 0 && !state.session.done.contains("greet") {
-            return PrimaryAction(title: "Start intro", symbol: "play.fill") { remote.startIntro() }
+        // Autopilot until Part 1 and breathing are done: the intro runs by itself and picks up
+        // where the visit is. The child's name is optional (Dr. Juni says "friend").
+        let done = state.session.done
+        if !(done.contains("chapter1") && done.contains("breathing")) {
+            let fresh = done.isEmpty
+            return PrimaryAction(title: fresh ? "Start intro" : "Continue intro",
+                                 symbol: "play.fill") { remote.startIntro() }
         }
         if journey.wantsStoryPick { return nil }
         guard let next = journey.nextStep else { return nil }
