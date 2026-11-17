@@ -1,0 +1,37 @@
+name: LullabyRemote
+options:
+  bundleIdPrefix: com.piramsingh
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: "33GDBL5G2F"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  LullabyRemote:
+    type: application
+    platform: iOS
+    sources: [LullabyRemote]
+    info:
+      path: LullabyRemote/Info.plist
+      properties:
+        CFBundleDisplayName: Dr. Juni
+        UILaunchScreen: {}
+        NSLocalNetworkUsageDescription: Dr. Juni Remote connects to the Lullaby app on your Mac over Wi-Fi to control the robot.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.piramsingh.LullabyRemote
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
