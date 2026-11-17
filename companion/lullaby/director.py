@@ -10,8 +10,8 @@ import wave
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import sfx, voice
-from .content import FLOW_LINES, REACTIONS, STEPS, STEPS_BY_KEY, THEMES, fill
+from . import listen, robot_mic, sfx, voice
+from .content import FLOW_LINES, REACTIONS, STEPS, STEPS_BY_KEY, THEMES, fill, plain
 from .robot import Robot
 
 log = logging.getLogger("lullaby.director")
@@ -58,6 +58,11 @@ class Director:
         self._warm_lock = threading.Lock()
         self._warming = False
         self._warm_again = False
+        self.listening: str | None = None   # "nickname" | "story" while the robot's mic is on
+        self.heard: dict | None = None       # the last answer heard through the robot's mic
+        self._listen_stop = threading.Event()
+        self.auto: str | None = None         # "intro" while the automatic intro runs
+        self._auto_stop = threading.Event()
         PARENT_DIR.mkdir(exist_ok=True)
 
     # ---- state for the panel ---------------------------------------------
@@ -72,7 +77,7 @@ class Director:
             "session": s.__dict__,
             "steps": [{"key": st.key, "label": st.label, "phase": st.phase, "hint": st.hint,
                        "needs_theme": st.needs_theme,
-                       "lines": [t for t, _ in self._lines_for(st.beats) if t]
+                       "lines": [plain(t) for t, _ in self._lines_for(st.beats) if t]
                        if (s.theme or not st.needs_theme) else []} for st in STEPS],
             "themes": [{"key": t.key, "label": t.label, "emoji": t.emoji} for t in THEMES.values()],
             "reactions": [{"key": k, "label": v[0]} for k, v in REACTIONS.items()],
@@ -80,6 +85,9 @@ class Director:
                        for k, v in PARENT_SLOTS.items()],
             "parent_playback": self.parent_playback(),
             "history": self.history[-12:],
+            "listening": self.listening,
+            "auto": self.auto,
+            "heard": self.heard,
             "voice": {"engine": voice.engine_label(),
                       "problem": self.voice_problem or voice.status["last_error"]},
         }
@@ -118,8 +126,8 @@ class Director:
                         continue
                     for beat, (text, _) in enumerate(self._lines_for(st.beats)):
                         if text:
-                            wav = voice.tts(text)
-                            sfx.with_effect(wav, sfx.effect_for(st.key, beat,
+                            wav = voice.tts_line(text, self.session.theme)
+                            sfx.with_effect(wav, sfx.cue_for(st.key, beat,
                                                                 self.session.theme))
             except Exception as e:  # noqa: BLE001
                 log.warning("Could not pre-make audio: %s", e)
@@ -167,7 +175,7 @@ class Director:
         self._note(f"Start: {label}")
         self._step_key = step_key
         self._spoken = []
-        self._planned = " ".join(t for t, _ in lines if t)
+        self._planned = " ".join(plain(t) for t, _ in lines if t)
         self._thread = threading.Thread(target=self._perform, args=(lines, step_key, self._stop),
                                         daemon=True)
         self._thread.start()
@@ -177,17 +185,17 @@ class Director:
             for beat, (text, motion) in enumerate(lines):
                 if stop.is_set():
                     break
-                self.line = text
+                self.line = plain(text)
                 if not text:
                     self.robot.move(motion, stop)
                     continue
-                wav = voice.tts(text)
+                wav = voice.tts_line(text, self.session.theme)
                 # Story lines can carry a soft sound effect mixed under their start.
-                wav = sfx.with_effect(wav, sfx.effect_for(step_key, beat, self.session.theme))
+                wav = sfx.with_effect(wav, sfx.cue_for(step_key, beat, self.session.theme))
                 length = voice.duration(wav)
                 began = time.monotonic()
-                self._speaking = (text, began, length)
-                self._spoken.append((text, began, length))
+                self._speaking = (plain(text), began, length)
+                self._spoken.append((plain(text), began, length))
                 self.robot.play(wav)
                 self.robot.move(motion, stop)
                 stop.wait(max(0.0, length - (time.monotonic() - began)) + LINE_GAP)
@@ -234,6 +242,133 @@ class Director:
         self.activity, self.label, self.line = "idle", "", ""
         threading.Thread(target=self.robot.move, args=("tilt",), daemon=True).start()
 
+    # ---- automatic intro: hello -> nickname -> story -> part 1 -> breathing ---------
+    INTRO_TIMEOUT = 90.0  # seconds to wait for a story picture tap before giving up
+
+    def start_intro(self) -> None:
+        """Run the intro by itself, listening on the robot's mic for the answers. It stops
+        before the steps that need the nurse's timing (mask practice, the goodbye)."""
+        if self.activity == "talking" or self.auto:
+            raise Busy("Robot is busy")
+        if not self.session.kid:
+            raise ValueError("Add the child's first name first")
+        self._auto_stop = threading.Event()
+        self.auto = "intro"
+        self.session.robot_name, self.session.theme = "", ""  # a fresh nickname and story
+        self._note("Intro started")
+        threading.Thread(target=self._intro, args=(self._auto_stop,), daemon=True).start()
+
+    def _wait_performance(self, stop: threading.Event) -> bool:
+        """Wait for the current line(s) to finish. False if stopped."""
+        while self._thread and self._thread.is_alive():
+            if stop.is_set():
+                return False
+            time.sleep(0.1)
+        return not stop.is_set()
+
+    def _intro(self, stop: threading.Event) -> None:
+        def step(key: str) -> bool:
+            if stop.is_set():
+                return False
+            self.run_step(key)
+            return self._wait_performance(stop)
+
+        def flow(key: str) -> bool:
+            if stop.is_set():
+                return False
+            self.flow_line(key)
+            return self._wait_performance(stop)
+
+        def ask(start, purpose: str) -> str | None:
+            if not start():
+                return None
+            try:
+                heard = self.listen_on_robot(purpose)
+            except (ValueError, Busy, robot_mic.MicError) as e:
+                log.warning("Intro couldn't listen: %s", e)
+                return None
+            return None if stop.is_set() else (heard or {}).get("result")
+
+        try:
+            if not step("greet"):
+                return
+            nick = ask(lambda: step("ask_name"), "nickname")
+            if stop.is_set():
+                return
+            if not nick:
+                nick = ask(lambda: flow("again_name"), "nickname")
+            if stop.is_set():
+                return
+            if not (step("got_name") if nick else flow("no_name")):
+                return
+
+            theme = ask(lambda: step("ask_story"), "story")
+            if stop.is_set():
+                return
+            if not theme:
+                theme = ask(lambda: flow("again_story"), "story")
+            if stop.is_set():
+                return
+            if not theme:  # still unsure: let the child tap a picture (on the panel or phone)
+                if not flow("tap_story"):
+                    return
+                waited = 0.0
+                while not self.session.theme and waited < self.INTRO_TIMEOUT:
+                    if stop.wait(0.2):
+                        return
+                    waited += 0.2
+                if not self.session.theme:
+                    self._note("Intro paused: no story picked")
+                    return
+            for key in ("chapter1", "breathing"):
+                if not step(key):
+                    return
+            self._note("Intro done: next is mask practice or the goodbye")
+        except Exception as e:  # noqa: BLE001
+            log.exception("Intro failed")
+            self._note(f"Intro stopped: {e}")
+        finally:
+            self.auto = None
+
+    # ---- listening through the robot's microphone ------------------------------
+    def listen_on_robot(self, purpose: str) -> dict:
+        """Record the child's answer on the robot's mic, understand it on this laptop, and
+        fill in the nickname or pick the story. Blocks until the child has answered (or not)."""
+        if purpose not in ("nickname", "story"):
+            raise ValueError("Unknown purpose")
+        if self.robot.mode != "robot":
+            raise ValueError("The robot isn't connected, so its microphone can't listen")
+        if self.activity == "talking":
+            raise Busy("Robot is talking")
+        if self.listening:
+            raise Busy("Already listening")
+        self._listen_stop = threading.Event()
+        self.listening, self.heard = purpose, None
+        self._note(f"Listening on the robot for the {purpose}")
+        try:
+            wav = robot_mic.record(self.robot.host, self._listen_stop)
+            if self._listen_stop.is_set():
+                self.heard = None
+                return {}
+            text, result = "", None
+            if wav:
+                text = listen.transcribe(wav, "robot.wav", purpose, 0.0, "")
+                if purpose == "nickname":
+                    result = listen.clean_nickname(text) or None
+                    if result:
+                        self.session.robot_name = result
+                else:
+                    result = listen.match_theme(text)
+                    if result:
+                        self.session.theme = result
+                if result:
+                    self.update_session()  # pre-make the lines that use the new answer
+            self.heard = {"purpose": purpose, "text": text, "result": result}
+            self._note(f"Heard ({purpose}): {text!r}" if text else f"Heard nothing ({purpose})")
+            return self.heard
+        finally:
+            self.listening = None
+
     # ---- recovery quiet mode ----------------------------------------------
     def start_recovery(self) -> None:
         self.stop()
@@ -251,6 +386,8 @@ class Director:
 
     def stop(self) -> None:
         was_recovery = self.activity == "recovery"
+        self._auto_stop.set()
+        self._listen_stop.set()
         self._stop.set()
         self.robot.stop_audio()
         self.parent_play = None

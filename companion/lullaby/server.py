@@ -18,7 +18,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from . import listen, voice
+from . import listen, robot_mic, voice
 from .director import Busy, Director
 from .robot import Robot
 
@@ -145,6 +145,22 @@ def build_app(robot: Robot) -> FastAPI:
         if out.get("barge"):
             logging.getLogger("lullaby.listen").info("Barge-in heard: %r", out.get("text"))
         return out
+
+    @app.post("/api/intro")
+    def intro():
+        """Run hello -> nickname -> story -> part 1 -> breathing by itself."""
+        return guard(director.start_intro)
+
+    @app.post("/api/listen/robot")
+    async def listen_robot(purpose: str):
+        """Listen through the robot's own microphone (the iPhone remote uses this)."""
+        try:
+            await asyncio.to_thread(director.listen_on_robot, purpose)
+        except Busy as e:
+            raise HTTPException(409, str(e)) from e
+        except (ValueError, robot_mic.MicError) as e:
+            raise HTTPException(400, str(e)) from e
+        return director.state()
 
     @app.post("/api/listen")
     async def listen_answer(purpose: str, file: UploadFile = File(...), start: float = 0.0,

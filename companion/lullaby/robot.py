@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import subprocess
 import threading
 import time
@@ -23,6 +24,9 @@ from pathlib import Path
 import requests
 
 log = logging.getLogger("lullaby.robot")
+
+# Robot speaker volume in percent, set each time the robot connects.
+VOLUME = int(os.environ.get("LULLABY_ROBOT_VOLUME", "85"))
 
 
 @dataclass(frozen=True)
@@ -112,6 +116,7 @@ class Robot:
             self.mini.enable_motors()
             self._uploaded.clear()
             self.set_wobble(True)
+            self.set_volume(VOLUME)
             self.move("neutral")
             self.error = None
             log.info("Connected to Reachy Mini at %s", self.daemon_url)
@@ -121,6 +126,14 @@ class Robot:
             self.error = "Robot not found · preview mode"
             log.warning("Robot not connected (%s). Running in preview mode.", e)
             return False
+
+    def set_volume(self, percent: int) -> None:
+        """Speaker volume (0-100). Set on every connect, since a robot reboot resets it."""
+        r = self._post("/api/volume/set", json={"volume": max(0, min(100, int(percent)))})
+        if r is None or not r.ok:
+            log.warning("Couldn't set the robot's volume to %s%%", percent)
+        else:
+            log.info("Robot volume set to %s%%", percent)
 
     def close(self) -> None:
         self.stop_audio()

@@ -26,17 +26,13 @@ _lock = threading.Lock()
 
 HINTS = {
     "nickname": "A child says a nickname for a friendly robot, like Sparkle, Beepy or Mr. Wiggles.",
-    "story": "Monster trucks, princesses, dinosaurs, outer space, animals, or superheroes.",
+    "story": "Princesses, dinosaurs, or superheroes.",
 }
 
 # Words a child might say for each story theme.
 THEME_WORDS: dict[str, tuple[str, ...]] = {
-    "trucks": ("truck", "monster", "car", "vroom", "wheel", "tractor", "digger"),
     "princess": ("princess", "prince", "queen", "king", "castle", "royal", "fairy"),
     "dinosaurs": ("dino", "dinosaur", "rex", "roar", "raptor", "jurassic"),
-    "space": ("space", "rocket", "astronaut", "star", "planet", "moon", "alien", "blast"),
-    "animals": ("animal", "puppy", "dog", "doggy", "cat", "kitty", "bunny", "lion", "bear",
-                "horse", "pet", "woof"),
     "heroes": ("superhero", "super hero", "hero", "super", "batman", "spider", "flying"),
 }
 

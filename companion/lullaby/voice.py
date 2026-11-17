@@ -59,15 +59,87 @@ def engine_label() -> str:
     return "ElevenLabs" if status["engine"] == "elevenlabs" else "Mac voice"
 
 
-def tts(text: str) -> Path:
-    """Return a WAV file of `text` spoken in a calm voice (cached)."""
+def tts_line(text: str, theme: str = "") -> Path:
+    """A whole script line as one WAV: Dr. Juni narrates, and words in <hero>/<helper> tags are
+    spoken in that character's voice (CHARACTER_VOICES), joined with short natural pauses."""
+    from .content import CHARACTER_VOICES, plain, segments
+
+    segs = segments(text)
+    if not EL_KEY or len(segs) <= 1 and (not segs or segs[0][0] is None):
+        return tts(plain(text))
+    parts = []
+    for speaker, words in segs:
+        vid = None
+        if speaker == "helper":
+            vid = CHARACTER_VOICES.get("helper")
+        elif speaker == "hero":
+            vid = CHARACTER_VOICES.get(f"hero:{theme}")
+        part = tts(words, vid)
+        parts.append(_leveled(part) if speaker else part)
+    if len(parts) == 1:
+        return parts[0]
+    out = CACHE / ("line_" + hashlib.sha1("|".join(p.name for p in parts).encode()).hexdigest()[:16]
+                   + ".wav")
+    if out.exists():
+        return out
+    gap = b"\x00\x00" * int(RATE_HZ * 0.18)
+    tmp = _tmp(out)
+    with wave.open(str(tmp), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(RATE_HZ)
+        for i, part in enumerate(parts):
+            with wave.open(str(part), "rb") as r:
+                if r.getframerate() != RATE_HZ or r.getnchannels() != 1:
+                    raise RuntimeError(f"unexpected audio format in {part.name}")
+                w.writeframes((gap if i else b"") + r.readframes(r.getnframes()))
+    tmp.replace(out)
+    return out
+
+
+CHARACTER_RMS_DB = -16.0  # Dr. Juni's speaking level; every character is matched to it
+
+
+def _leveled(path: Path) -> Path:
+    """A character's line at Dr. Juni's loudness, so no voice is much quieter or louder than
+    the narrator. Peaks stay under -1 dB."""
+    import numpy as np
+
+    out = path.with_name(f"lvl_{path.stem}.wav")
+    if out.exists():
+        return out
+    with wave.open(str(path), "rb") as r:
+        params = r.getparams()
+        data = np.frombuffer(r.readframes(r.getnframes()), dtype="<i2").astype(np.float32) / 32768
+    if not len(data):
+        return path
+    frames = data[: len(data) // 512 * 512].reshape(-1, 512)
+    frame_rms = np.sqrt((frames ** 2).mean(axis=1)) if len(frames) else np.array([0.0])
+    peak = float(np.abs(data).max())
+    loud = frame_rms[frame_rms > max(peak * 0.05, 1e-4)]
+    rms = float(np.sqrt((loud ** 2).mean())) if len(loud) else 0.0
+    if rms <= 0:
+        return path
+    gain = min(10 ** (CHARACTER_RMS_DB / 20) / rms, 10 ** (-1 / 20) / peak)
+    tmp = _tmp(out)
+    with wave.open(str(tmp), "wb") as w:
+        w.setparams(params)
+        w.writeframes(np.clip(data * gain * 32768, -32768, 32767).astype("<i2").tobytes())
+    tmp.replace(out)
+    return out
+
+
+def tts(text: str, voice_id: str | None = None) -> Path:
+    """Return a WAV file of `text` spoken in a calm voice (cached). `voice_id` picks another
+    ElevenLabs voice (a story character); the default is Dr. Juni."""
     CACHE.mkdir(parents=True, exist_ok=True)
     if EL_KEY:
-        out = _cached("el", f"{EL_VOICE}|{EL_MODEL}|{_voice_settings().model_dump_json()}", text)
+        vid = voice_id or EL_VOICE
+        out = _cached("el", f"{vid}|{EL_MODEL}|{_voice_settings().model_dump_json()}", text)
         if out.exists():
             return out
         try:
-            _elevenlabs(text, out)
+            _elevenlabs(text, out, vid)
             status["engine"], status["last_error"] = "elevenlabs", None
             return out
         except Exception as e:  # noqa: BLE001 - never leave the child waiting in silence
@@ -103,9 +175,9 @@ def _voice_settings() -> VoiceSettings:
                          use_speaker_boost=True, speed=EL_SPEED)
 
 
-def _elevenlabs(text: str, out: Path) -> None:
+def _elevenlabs(text: str, out: Path, voice_id: str | None = None) -> None:
     audio = _el().text_to_speech.convert(
-        voice_id=EL_VOICE,
+        voice_id=voice_id or EL_VOICE,
         text=text,
         model_id=EL_MODEL,
         output_format=f"pcm_{RATE_HZ}",

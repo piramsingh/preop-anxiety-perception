@@ -5,12 +5,18 @@ Each step is a list of beats. A beat is (text, motion). Text may use:
   {robot} the name the child gave the robot
   {hero}  the story hero's full name, {short} the short name
   {fun}   what the hero loves doing, {place} where the hero gets fixed
+  {catch} the hero's catchphrase
+
+Characters speak in their own voices: wrap their words in <hero>...</hero> (the story's hero)
+or <helper>...</helper> (the kind nurse/doctor). Everything else is Dr. Juni narrating.
+A theme without a hero voice in CHARACTER_VOICES reads the hero's words in Dr. Juni's voice.
 
 Motions are named in robot.py (MOTIONS). An empty text means "move only".
 Wording rules: never promise it won't hurt, never mention needles,
 keep the medical steps generic so they fit most day-surgery visits.
 """
 
+import re
 from dataclasses import dataclass
 
 ROBOT_NAME = "Dr. Juni"  # the robot's own name; the child can add a nickname
@@ -26,29 +32,22 @@ class Theme:
     fun: str
     place: str
     picked: str  # what the robot says when the child picks this theme
+    catch: str  # the hero's catchphrase, in the hero's own voice
 
 
 THEMES: dict[str, Theme] = {
     t.key: t
     for t in [
-        Theme("trucks", "Monster trucks", "🛻", "Big Red the monster truck", "Big Red",
-              "zooming over giant mud hills", "the Truck Doctor's garage",
-              "Monster trucks! Vroom vroom! Great choice."),
         Theme("princess", "Princesses", "👑", "Princess Luna", "Princess Luna",
               "dancing around the castle garden", "the castle doctor's tower",
-              "A princess story! How royal. Great choice."),
+              "A princess story! How royal. Great choice.",
+              "Twirl, twirl, twirl! What a beautiful day!"),
         Theme("dinosaurs", "Dinosaurs", "🦖", "Tiny Rex the dinosaur", "Tiny Rex",
               "stomping through the jungle", "the dino doctor's cave",
-              "Dinosaurs! Roar! Great choice."),
-        Theme("space", "Outer space", "🚀", "Captain Nova the astronaut", "Captain Nova",
-              "flying past the stars", "the space station doctor",
-              "Outer space! Three, two, one, blast off! Great choice."),
-        Theme("animals", "Animals", "🐶", "Biscuit the puppy", "Biscuit",
-              "chasing butterflies in the park", "the animal doctor's clinic",
-              "Animals! Woof woof! Great choice."),
+              "Dinosaurs! Roar! Great choice.", "Stomp, stomp, stomp! I love the jungle!"),
         Theme("heroes", "Superheroes", "🦸", "Captain Brave", "Captain Brave",
               "flying over the city to help people", "the hero headquarters doctor",
-              "Superheroes! Whoosh! Great choice."),
+              "Superheroes! Whoosh! Great choice.", "Up, up, and away!"),
     ]
 }
 
@@ -80,16 +79,21 @@ STEPS: list[Step] = [
     Step("ask_story", "Pick a story", "Before surgery",
          "Listens automatically. Pictures work too.",
          (("Do you want to hear a story? You get to pick!", "happy"),
-          ("Monster trucks, princesses, dinosaurs, outer space, animals, or superheroes?",
+          ("Princesses, dinosaurs, or superheroes?",
            "look_around"))),
     Step("chapter1", "Story · Part 1", "Before surgery",
          "About 1 min. Ends at the nap.",
          (("{picked}", "celebrate"),
           ("Once upon a time, there was {hero}.", "happy"),
           ("{short} loved {fun}.", "bounce"),
+          ("<hero>{catch}</hero>", "celebrate"),
           ("One day, {short} needed a little fix, so they went to {place}.", "tilt"),
-          ("First, a friendly helper gave {short} a special bracelet with their name on it. "
-           "Just like the one on your wrist!", "nod"),
+          ("{short} said, <hero>I feel a tiny bit nervous.</hero>", "tilt"),
+          ("<helper>That's okay, {short}. Lots of friends feel nervous. "
+           "We'll be right here with you.</helper>", "nod"),
+          ("First, a friendly helper gave {short} a special bracelet. <helper>This has your name "
+           "on it, so everyone knows just who you are!</helper> Just like the one on your wrist!",
+           "nod"),
           ("Then {short} put on comfy pajamas called a gown.", "wiggle"),
           ("The doctors wore funny hats and masks, so all {short} could see were their eyes. "
            "Peekaboo!", "peekaboo"),
@@ -132,9 +136,11 @@ STEPS: list[Step] = [
           ("Remember {short}? Here's what happened next.", "tilt"),
           ("{short} woke up in a cozy room. Everything felt a little sleepy and wobbly, "
            "and that was okay.", "sleepy_wake"),
-          ("A kind nurse was right there. {short} said, I feel a little sore, "
-           "and the nurse helped. You can always tell your nurse how you feel, too.", "nod"),
+          ("A kind nurse was right there. {short} said, <hero>I feel a little sore.</hero>", "nod"),
+          ("<helper>Thank you for telling me. Let me help you feel better.</helper>", "nod"),
+          ("You can always tell your nurse how you feel, too.", "nod"),
           ("And guess what? The fix worked! Soon {short} was back to {fun}.", "bounce"),
+          ("<hero>{catch}</hero>", "celebrate"),
           ("And you know who else was super brave today? You, {kid}!", "celebrate"),
           ("You earned the brave badge. The end!", "wave")),
          needs_theme=True),
@@ -147,8 +153,7 @@ STEPS_BY_KEY = {s.key: s for s in STEPS}
 FLOW_LINES: dict[str, tuple[str, str]] = {
     "again_name": ("Hmm, I didn't catch that. What nickname should I have?", "tilt"),
     "no_name": ("That's okay! You can just call me Dr. Juni.", "nod"),
-    "again_story": ("Which story do you want? Trucks, princesses, dinosaurs, space, animals, "
-                    "or superheroes?", "tilt"),
+    "again_story": ("Which story do you want? Princesses, dinosaurs, or superheroes?", "tilt"),
     "tap_story": ("You can tap a picture on the screen to pick!", "look_around"),
 }
 
@@ -169,5 +174,36 @@ def fill(text: str, kid: str, robot: str, theme: Theme | None) -> str:
     values = {"kid": kid or "friend", "robot": robot or ROBOT_NAME}
     if theme:
         values |= {"hero": theme.hero, "short": theme.short, "fun": theme.fun,
-                   "place": theme.place, "picked": theme.picked}
+                   "place": theme.place, "picked": theme.picked, "catch": theme.catch}
     return text.format(**values)
+
+
+# ElevenLabs voices for the story characters. Dr. Juni (the narrator) is ELEVENLABS_VOICE_ID.
+# "hero:<theme>" is that story's hero; themes not listed read hero lines in Dr. Juni's voice.
+CHARACTER_VOICES: dict[str, str] = {
+    "helper": "hvaTlkkyiFqppzonG44z",          # "Lullaby - Helper" (the kind nurse)
+    "hero:heroes": "r9Av2qPAV73QYoFco2cP",     # "Lullaby - Captain Brave"
+    "hero:dinosaurs": "ARUE4uhEjT2WtFjoLgjP",  # "Lullaby - Tiny Rex"
+    "hero:princess": "WT3mxxi4VupyyN8GsGjE",   # "Lullaby - Princess Luna"
+}
+
+_TAG = re.compile(r"<(hero|helper)>(.*?)</\1>", re.S)
+
+
+def segments(text: str) -> list[tuple[str | None, str]]:
+    """Split a filled line into (speaker, words): speaker None is Dr. Juni narrating."""
+    out: list[tuple[str | None, str]] = []
+    pos = 0
+    for m in _TAG.finditer(text):
+        if text[pos:m.start()].strip():
+            out.append((None, text[pos:m.start()].strip()))
+        out.append((m.group(1), m.group(2).strip()))
+        pos = m.end()
+    if text[pos:].strip():
+        out.append((None, text[pos:].strip()))
+    return out
+
+
+def plain(text: str) -> str:
+    """The line as words only, for the panel, subtitles and listening."""
+    return _TAG.sub(lambda m: m.group(2), text)
