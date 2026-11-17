@@ -174,6 +174,8 @@ final class Remote {
         }
     }
     func startIntro() { send("/api/intro", id: "intro", starts: true) }
+    /// Start the visit over from hello. Keeps the child's name and parent recordings.
+    func restartIntro() { send("/api/intro?restart=true", id: "intro", starts: true) }
     func quietMode() { send("/api/recovery", id: "quiet", starts: true) }
     func playParent(_ slot: String) { send("/api/parent/\(slot)/play", id: "parent.\(slot)", starts: true) }
     func pauseParent() { send("/api/parent/pause", id: "parent.pause") }

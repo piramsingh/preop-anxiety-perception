@@ -21,6 +21,7 @@ struct RootView: View {
 
     @State private var sheet: Sheet?
     @State private var confirmEnd = false
+    @State private var confirmRestart = false
     @State private var celebrating: Milestone?
     @State private var celebrations = 0
     @State private var showBrave = false
@@ -53,6 +54,15 @@ struct RootView: View {
                         .transition(.opacity)
                         .allowsHitTesting(false)
                 }
+            }
+            .confirmationDialog("Start the visit over?", isPresented: $confirmRestart,
+                                titleVisibility: .visible) {
+                Button("Start over from Hello") {
+                    showBrave = false
+                    remote.restartIntro()
+                }
+            } message: {
+                Text("Dr. Juni stops and runs the intro again from Hello, asking for a new nickname and story. The child's name and the parent's recordings stay.")
             }
             .confirmationDialog("End this visit?", isPresented: $confirmEnd, titleVisibility: .visible) {
                 Button("End visit and delete recordings", role: .destructive) {
@@ -184,6 +194,11 @@ struct RootView: View {
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("Start over", systemImage: "arrow.counterclockwise") { confirmRestart = true }
+                .disabled(remote.state.map { $0.session.done.isEmpty && !$0.isBusy } ?? true)
+                .accessibilityHint("Runs the intro again from Hello")
+        }
         if !wide {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("This visit", systemImage: "person.text.rectangle") { sheet = .visit }
@@ -194,6 +209,8 @@ struct RootView: View {
             Menu {
                 Button("Start or continue intro", systemImage: "play.fill") { remote.startIntro() }
                     .disabled(remote.state.map { $0.isBusy } ?? true)
+                Button("Start over from Hello", systemImage: "arrow.counterclockwise") { confirmRestart = true }
+                    .disabled(remote.state == nil)
                 Button("Sticker book", systemImage: "seal.fill") { sheet = .stickers }
                     .disabled(remote.state == nil)
                 Divider()

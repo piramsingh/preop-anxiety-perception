@@ -422,3 +422,26 @@ def test_intro_continues_where_the_visit_is(client, monkeypatch):
     assert heard == ["story"]  # nickname was already given
     assert s["session"]["robot_name"] == "Sparky"
     assert s["session"]["done"] == ["greet", "got_name", "ask_story", "chapter1", "breathing"]
+
+
+def test_start_over_runs_the_intro_from_hello(client, monkeypatch):
+    def fake_listen(self, purpose):
+        result = "Sparky" if purpose == "nickname" else "princess"
+        if purpose == "nickname":
+            self.session.robot_name = result
+        else:
+            self.session.theme = result
+        return {"purpose": purpose, "text": result, "result": result}
+
+    monkeypatch.setattr(director_mod.Director, "listen_on_robot", fake_listen)
+    client.post("/api/session", json={"kid": "Sam", "robot_name": "Old", "theme": "heroes"})
+    client.post("/api/step/chapter1")
+    wait_idle(client)
+    assert client.post("/api/intro?restart=true").status_code == 200
+    deadline = time.time() + 10
+    while client.get("/api/state").json()["auto"] and time.time() < deadline:
+        time.sleep(0.05)
+    s = client.get("/api/state").json()["session"]
+    assert s["kid"] == "Sam"  # kept
+    assert s["robot_name"] == "Sparky" and s["theme"] == "princess"  # asked again
+    assert s["done"][0] == "greet" and s["done"][-1] == "breathing"

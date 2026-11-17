@@ -147,9 +147,10 @@ def build_app(robot: Robot) -> FastAPI:
         return out
 
     @app.post("/api/intro")
-    def intro():
-        """Run hello -> nickname -> story -> part 1 -> breathing by itself."""
-        return guard(director.start_intro)
+    def intro(restart: bool = False):
+        """Run hello -> nickname -> story -> part 1 -> breathing by itself. With restart=true
+        the visit starts over from hello (the child's name and parent recordings stay)."""
+        return guard(director.restart_intro if restart else director.start_intro)
 
     @app.post("/api/listen/robot")
     async def listen_robot(purpose: str):

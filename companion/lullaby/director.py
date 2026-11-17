@@ -245,6 +245,18 @@ class Director:
     # ---- automatic intro: hello -> nickname -> story -> part 1 -> breathing ---------
     INTRO_TIMEOUT = 90.0  # seconds to wait for a story picture tap before giving up
 
+    def restart_intro(self) -> None:
+        """Start the visit over: stop whatever is running, clear the progress, nickname and
+        story (the child's name and the parent's recordings stay), and run the intro again."""
+        self.stop()
+        while self.auto:  # let a running intro notice the stop and finish
+            time.sleep(0.05)
+        self.session.done = []
+        self.session.robot_name, self.session.theme = "", ""
+        self.heard = None
+        self._note("Visit started over")
+        self.start_intro()
+
     def start_intro(self) -> None:
         """Run the intro by itself, listening on the robot's mic for the answers. It stops
         before the steps that need the nurse's timing (mask practice, the goodbye)."""
